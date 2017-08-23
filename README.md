@@ -17,23 +17,21 @@ flatte.do([
 #### Manifesto Json
 ```json
 {
-     "customer": {
-          "childs": {
-               "customerID": {
-                    "_q": {"ID": true}
-	}}},
-     "employe": {
-          "childs": {
-               "employeID": {
-					"_q": {"ID": true},
-	                "childs": {
-						"firstName": {
-							"_q": {
-								"saveValue": {"filter": "uppercase"},
-								"deleteValue": ".auth",
-								"copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#employeID/firstName"}]
-}}}}}}}
-					
+	"customer": {
+		"childs": {
+			"customerID": {"_q": {"ID": true}
+					"childs": {
+						"firstName": {"_q": {
+							"saveValue": {"filter": "uppercase"},
+							"deleteValue": ".auth",
+							"copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#customerID/firstName"}]
+						}
+					}
+				}
+			}
+		}
+	}
+}
 ```
 
 ## License
