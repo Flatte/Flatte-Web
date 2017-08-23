@@ -4,36 +4,52 @@
 Client-Side nosql Firebase Realtime Database save management. 
 
 ### Attention!
-This is a beta work. Not all tests were done.
-They may have malfunctioning functions.
-<span style="color:red">We do not recommend using it in your actual projects.</span>
+This is a beta release. We have not finished all the tests yet.
+Some functions may not work as expected.
+**We do not recommend using flatte in your actual projects.**
 
-## Demo
+## Demo 
+Easy and free registration
 [Flatte Manifesto Builder](https://flatte.maxabab.com)
 
 ## Example
 #### Javascript Code
 ```javascript
 flatte.do([
-  Ref:"customer",
-  data:{"-KrvGZuVwqwerty":{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}}
+  {
+    Ref:"customer/-KrvGZuVwqwerty",
+    data:{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
+  }
 ]);
 ```
 
 #### Manifesto Json
 ```javascript
 {
-  "customer": {
-    "childs": {
-      "customerID": {"_q": {
-          "ID": true
+  data:{
+    "customer": {
+      "childs": {
+        "customerID": {
+          "_q": {
+            "ID": true
+          }
+          "childs": {
+            "firstName": {
+              "_q": {
+                "saveValue": {"filter": "uppercase"},
+                "deleteValue": ".auth",
+                "copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#customerID/firstName"}]
+              }
+            }
+          }
         }
-        "childs": {
-          "firstName": {"_q": {
-              "saveValue": {"filter": "uppercase"},
-              "deleteValue": ".auth",
-              "copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#customerID/firstName"}]
-}}}}}}}
+      }
+    }
+  },
+  id_index{
+    "customer>ID":"customerID"
+  }
+}
 ```
 #### Finish
 | Incoming data                                    | Recorded data                                    |
