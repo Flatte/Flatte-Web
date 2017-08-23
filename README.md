@@ -51,13 +51,13 @@ flatte.do([
   }
 }
 ```
-#### Finish
+#### Results
 | Incoming data                                    | Recorded data                                    |
 |--------------------------------------------------|--------------------------------------------------|
-| Customer/-KrvGZuVwqwerty/firsName:"Elon"         | Customer/-KrvGZuVwqwerty/firsName:"**ELON**"     |
-| Customer/-KrvGZuVwqwerty/lastName:"Musk"         | Customer/-KrvGZuVwqwerty/lastName:"Musk"         |
-| Customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | Customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
-|                                                  | **Contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
+| customer/-KrvGZuVwqwerty/firsName:"Elon"         | customer/-KrvGZuVwqwerty/firsName:"**ELON**"     |
+| customer/-KrvGZuVwqwerty/lastName:"Musk"         | customer/-KrvGZuVwqwerty/lastName:"Musk"         |
+| customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
+|                                                  | **contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
 
 ![alt text](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
 
