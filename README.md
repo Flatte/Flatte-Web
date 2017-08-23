@@ -1,37 +1,41 @@
-## Welcome to Flatte
+# Welcome to Flatte
 
-You can use the [editor on GitHub](https://github.com/Flatte/Flatte-Web/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Client-Side nosql Firebase Realtime Database save management. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Demo
+[Flatte Manifesto Builder](https://flatte.maxabab.com)
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+## Example
+#### Javascript Code
+```javascript
+flatte.do([
+  Ref:"customer",
+  data:{"-KrvGZuVwqwerty":{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}}
+]);
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+#### Manifesto Json
+```json
+{
+     "customer": {
+          "childs": {
+               "customerID": {
+                    "_q": {"ID": true}
+	}}},
+     "employe": {
+          "childs": {
+               "employeID": {
+					"_q": {"ID": true},
+	                "childs": {
+						"firstName": {
+							"_q": {
+								"saveValue": {"filter": "uppercase"},
+								"deleteValue": ".auth",
+								"copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#employeID/firstName"}]
+}}}}}}}
+					
+```
 
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Flatte/Flatte-Web/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+## License
+- Flatte is licensed under the MIT license.
+  - [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)
