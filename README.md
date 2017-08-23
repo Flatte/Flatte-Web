@@ -1,10 +1,15 @@
 # Welcome to Flatte
+![alt text](https://flatte.maxabab.com/assets/images/logos/flatte%20logo_Header.png "Flatte Logo")
 
 Client-Side nosql Firebase Realtime Database save management. 
 
+### Attention!
+This is a beta work. Not all tests were done.
+They may have malfunctioning functions.
+<span style="color:red">We do not recommend using it in your actual projects.</span>
+
 ## Demo
 [Flatte Manifesto Builder](https://flatte.maxabab.com)
-![alt text](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
 
 ## Example
 #### Javascript Code
@@ -37,6 +42,8 @@ flatte.do([
 | Customer/-KrvGZuVwqwerty/lastName:"Musk"         | Customer/-KrvGZuVwqwerty/lastName:"Musk"         |
 | Customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | Customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
 |                                                  | **Contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
+
+![alt text](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
 
 ## License
 - Flatte is licensed under the MIT license.
