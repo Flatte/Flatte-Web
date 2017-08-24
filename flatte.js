@@ -114,7 +114,9 @@
 				guid = "GUID" + f.dbKey(),   // Create doActionId for debuging.
 				preDefined = {
 					".timestamp": firebase.database.ServerValue.TIMESTAMP,  // firebase server timestamp creates double timestamp. Manifest Builder shows it as updated;
-					".auth": mxFlatte.settings.auth                         // who is doing this action
+					".auth": mxFlatte.settings.auth,                         // who is doing this action
+					//".test": {test_a:{test_b:1},test_c:1}
+					".test": {test_a:1}
 				},
 				commands = {
 					ID: function(ref,data,path,options,action){
@@ -129,14 +131,9 @@
 							if ((options !== "doNothing") && (action === "save") && (!angular.isObject(data))) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (angular.isObject(options)){
-									var filterData = null;
-									if ((options.$value === null) || (options.$value === "") || (options.$value === "$")) filterData = data;
-									else filterData = doAction.commands._replaceIDs(guid, ref, options.$value);
-									if (options.$type === "filter") {
-										var params = options.$params.split(":");
-										params.unshift(filterData);
-										results[path] = $filter(options.$filter).apply(this,params);
-									}
+									var params = (options.hasOwnProperty("params")) ? options.params.split(":") : [];
+									params.unshift(data);
+									results[path] = $filter(options.filter).apply(this, params);
 								} else {
 									if ((options === null) || (options === "$")) results[path] = data;
 									else results[path] = options;
@@ -320,10 +317,23 @@
 					perform,
 					createFinalResults,
 					update,
-					prepareEnd,
 					endAction
 				];
-			return f.serial(tasks);
+
+			return $q(function(resolve,reject){
+				f.serial(tasks).then(function(){
+					if (mxFlatte.settings.debug) {
+						// Ended action return resolved result
+						resolve({results:(doAction.var[guid].results || "No save result generated !.."),manifestInfections:doAction.var[guid].appliedManifest});
+					} else {
+						// if debug is not true remove variables stored in doAction.var debug container.
+						delete doAction.var[guid];
+						resolve();
+					}
+					f.debug("flatte.do() ended with success");
+				}).catch(function(err){reject(err)})
+			});
+
 
 			function createAction() {
 				f.debug("Create action.");
@@ -332,7 +342,8 @@
 					doAction.var[guid] = {
 						log: {"startedAt": moment()},   // set variable container with doActionId. Add action start time.
 						objects: {},                    // object container
-						results: {}                     // main result to save database
+						results: {},                    // main result to save database
+						appliedManifest: []             // manifest applied Effect
 					};
 
 					f.debug("Check sent data");
@@ -494,7 +505,7 @@
 								hasItem = false;
 							}
 							if (!hasItem) {
-								if (mxFlatte.settings.manifest.id_index.hasOwnProperty(newPath.join('>')+">ID")) {
+								if ((mxFlatte.settings.manifest.hasOwnProperty("id_index"))&&(mxFlatte.settings.manifest.id_index.hasOwnProperty(newPath.join('>')+">ID"))) {
 									var ID = mxFlatte.settings.manifest.id_index[newPath.join('>')+">ID"];
 									newPath.push(ID);
 									doAction.var[guid].objects[ref].$ids["#"+ID] = item;
@@ -534,6 +545,7 @@
 
 					try {
 						manifest = eval("mxFlatte.settings.manifest.data"+((manifestPath.length > 0) ? "['"+manifestPath.join("'].childs['")+"']":"")+"._q");
+						if (manifest) doAction.var[guid].appliedManifest.push((manifestPath.length > 0) ? manifestPath.join("/") : "");
 					} catch(err) {reject(err);return false;}
 
 					for(var command in commands){
@@ -555,7 +567,7 @@
 				var promises = [];
 				angular.forEach(doAction.var[guid].objects,function(object) {
 					promises.push($q(function (resolve, reject) {
-						_replace(object.ref, object.$results,true).then(function (res) {
+						_replace(object.ref, object.$results).then(function (res) {
 							doAction.var[guid].objects[object.ref].$results = res;
 							$.extend(doAction.var[guid].results,res);
 							resolve()
@@ -568,57 +580,15 @@
 				return $q.all(promises);
 			}
 
-			function _replace(ref,data,checkObjectData){
+			function _replace(ref,data){
 				var promises = [],results = {};
-
-				function objToStr(data,path){
-					var promises = [],results = {};
-
-					angular.forEach(data,function(value,key){
-						var newPath = (path || []);
-						if (angular.isObject(value)) {
-							promises.push($q(function(resolve,reject){
-								try {
-									newPath.push(key);
-									objToStr(value,newPath).then(function(){resolve()}).catch(function(err){reject(err)});
-								} catch(err){console.log(err);reject(err)}
-							}))
-						} else {
-							promises.push($q(function(resolve,reject){
-								try {
-									eval("results"+((newPath.length > 0) ? "['" + newPath.join("/") + "/" + key + "']" : "['" + key + "']") + " = value");
-								} catch(err){console.log(err);reject(err)}
-								resolve();
-							}))
-						}
-					});
-
-					return $q(function(resolve,reject){
-						$q.all(promises).then(function(){
-							resolve(results);
-						}).catch(function(err){reject(err);return false;});
-					});
-				}
 
 				angular.forEach(data,function(value,key){
 					promises.push($q(function(resolve,reject){
 						_replaceIDs(ref,key).then(function(keyRes){
 							_replaceIDs(ref,value).then(function(valueRes){
-								var tempResult = (preDefined.hasOwnProperty(valueRes)) ? preDefined[valueRes] : valueRes;
-								if (angular.isObject(tempResult)) {
-									if ((checkObjectData) && (valueRes !== ".timestamp")) {
-										objToStr(tempResult,keyRes.split("/")).then(function(res){
-											angular.extend(results,res);
-											resolve();
-										}).catch(function(err){});
-									} else {
-										results[keyRes] = tempResult;
-										resolve();
-									}
-								} else {
-									results[keyRes] = tempResult;
-									resolve();
-								}
+								results[keyRes] = (preDefined.hasOwnProperty(valueRes)) ? preDefined[valueRes] : valueRes;
+								resolve();
 							}).catch(function(err){reject(err);return false;})
 						}).catch(function(err){reject(err);return false;})
 					}));
@@ -651,7 +621,6 @@
 
 			function update() {
 				f.debug("Run Update.");
-				console.log("update",doAction.var[guid].results);
 				return $q(function(resolve,reject){
 					firebase.database().ref(f.baseRef()).update(doAction.var[guid].results,function(err){
 						if (err) reject(err); else resolve()
@@ -659,25 +628,13 @@
 				})
 			}
 
-			function prepareEnd(){
-				f.debug("Prepare ending.");
-				return $q(function (resolve, reject) {
-					if (mxFlatte.settings.debug) {
-						// Ended action return resolved result
-						resolve((doAction.var[guid].results || "No save result generated !.."));
-					} else {
-						// if debug is not true remove variables stored in doAction.var debug container.
-						delete doAction.var[guid];
-					}
-					f.debug("flatte.do() ended with success");
-					resolve(guid);
-				});
-			}
-
 			function endAction(err) {
-				doAction.var[guid].log["endedAt"] = moment();
-				doAction.var[guid].log["duration"] = moment.duration(doAction.var[guid].log["endedAt"].diff(doAction.var[guid].log["startedAt"])).asMilliseconds() + " milliseconds";
-				doAction.var[guid].log._error = (err || null);
+				return $q(function(resolve,reject){
+					doAction.var[guid].log["endedAt"] = moment();
+					doAction.var[guid].log["duration"] = moment.duration(doAction.var[guid].log["endedAt"].diff(doAction.var[guid].log["startedAt"])).asMilliseconds() + " milliseconds";
+					doAction.var[guid].log._error = (err || null);
+					resolve();
+				})
 			}
 		}
 		doAction.var = {};
