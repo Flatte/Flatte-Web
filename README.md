@@ -92,7 +92,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 * **Sezer Ekinci** - *Initial work* - [@micanose](https://github.com/micanose)
 * **Kaan Ekinci** - *Initial work* - [@kaanekinci](https://github.com/kaanekinci)
 
-See also the list of [contributors.md](https://github.com/Flatte/Flatte-Web/graphs/contributors) who participated in flatte.js.
+See also the list of [contributors](https://github.com/Flatte/Flatte-Web/graphs/contributors) who participated in flatte.js.
 
 ## License
 - Flatte.Js is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details

@@ -1,0 +1,28 @@
+{
+  "name": "Flatte",
+  "version": "1.00.67",
+  "description": "Nosql denormalization management for Firebase",
+  "scripts": {
+    "build": "gulp build"
+  },
+  "keywords": [
+    "flatte"
+  ],
+  "repository": "https://github.com/Flatte/Flatte-Web",
+  "author": "Sezer Ekinci, sezer@maxabab.com, Kaan Ekinci, kaan@maxabab.com",
+  "license": "Copyright 2017 maxabab adv",
+  "private": false,
+  "_libVersion": 55,
+  "dependencies": {},
+  "devDependencies": {
+    "bower": "^1.8.0",
+    "express": "^4.13.3",
+    "fs": "0.0.1-security",
+    "gulp": "^3.9.1",
+    "gulp-json-editor": "^2.2.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.5.4",
+    "gulp-uglify": "^2.0.0",
+    "uglify-save-license": "^0.4.1"
+  }
+}

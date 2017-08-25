@@ -1,0 +1,34 @@
+{
+  "name": "Flatte",
+  "version": "1.00.67",
+  "main": "dist/flatte.min.js",
+  "description": "Nosql denormalization management for Firebase",
+  "keywords": [
+    "Flatte",
+    "flattejs",
+    "denormalization",
+    "firebase",
+    "angularjs",
+    "transection",
+    "Json",
+    "Nosql",
+    "database",
+    "management"
+  ],
+  "repository": "https://github.com/Flatte/Flatte-Web",
+  "author": "Sezer Ekinci, sezer@maxabab.com, Kaan Ekinci, kaan@maxabab.com",
+  "license": "Copyright 2017 maxabab adv",
+  "private": false,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.3",
+    "angular": "~1.5.7",
+    "angular-sanitize": "~1.5.7",
+    "angular-ui-router": "~0.2.15",
+    "firebase": "^3.6.4"
+  }
+}

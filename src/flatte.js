@@ -1,13 +1,17 @@
 /**
+ *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v1.0.23 - 05.08.2017 
+ * @version {*{version}*} - {*{date}*}
  *
- * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com> 
+ * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
  *
  * @author Sezer Ekinci <sezer@maxabab.com>
  * @author Kaan Ekinci <kaan@maxabab.com>
+ *
+ * @Controbutors https://github.com/Flatte/Flatte-Web/graphs/contributors
+ *
  */
 
 !function(){
@@ -23,11 +27,15 @@
 		var provider = this;
 		var settings = {
 			debug: false,
-			auth: false,
 			baseRef: "/",
 			conStatus: false,
 			con: null,
-			manifest: null
+			manifest: null,
+			predefined: {
+				".timestamp": firebase.database.ServerValue.TIMESTAMP,  // firebase server timestamp creates double timestamp. Manifest Builder shows it as updated;
+				".auth": false,                         // who is doing this action
+				".id": function(){ return firebase.database().ref().push().key; }
+			}
 		};
 
 		provider.settings = function(options){ angular.extend(settings,options); };
@@ -73,8 +81,8 @@
 		mxFlatte.checkConnection();
 	}
 
-	flatte.$inject = ['mxFlatte','$q','$filter','$timeout'];
-	function flatte(mxFlatte,$q,$filter,$timeout){
+	flatte.$inject = ['mxFlatte','$q','$filter'];
+	function flatte(mxFlatte,$q,$filter){
 		var f = this;
 		f.debug = debug;
 		f.serial = serial;
@@ -84,7 +92,20 @@
 		f.dbKey = function(){ return firebase.database().ref().push().key };
 		f.cleanData = function(data){ return JSON.parse(JSON.serialize(data)) };
 		f.setManifest = function(manifest){mxFlatte.settings.manifest = manifest};
-		f.auth = function(auth){ if (auth) mxFlatte.settings.auth = auth; else return mxFlatte.settings.auth; };
+		f.setPredefined = function(newData){
+			mxFlatte.settings.predefined = newData;
+		};
+		f.predefined = function(item,value){
+			if (item) {
+				if (typeof item === "object") {
+					angular.forEach(item,function(value,key){
+						mxFlatte.settings.predefined[key] = value;
+					})
+				} else {
+					mxFlatte.settings.predefined[item] = value;
+				}
+			} else return mxFlatte.settings.predefined;
+		};
 		f.baseRef = function(ref){if (ref) mxFlatte.settings.baseRef = ref; else return mxFlatte.settings.baseRef; };
 		f.do = doAction;
 
@@ -111,13 +132,11 @@
 		function doAction (saveObjects){
 			f.debug("flatte.do() called...");
 			var
-				guid = "GUID" + f.dbKey(),   // Create doActionId for debuging.
-				preDefined = {
-					".timestamp": firebase.database.ServerValue.TIMESTAMP,  // firebase server timestamp creates double timestamp. Manifest Builder shows it as updated;
-					".auth": mxFlatte.settings.auth,                         // who is doing this action
-					//".test": {test_a:{test_b:1},test_c:1}
-					".test": {test_a:1}
+				getTime = function(){
+					var date = new Date();
+					return date.valueOf();
 				},
+				guid = "GUID" + f.dbKey(),   // Create doActionId for debuging.
 				commands = {
 					ID: function(ref,data,path,options,action){
 						return $q(function(resolve,reject){
@@ -128,7 +147,7 @@
 						return $q(function(resolve,reject){
 							var results = {};
 
-							if ((options !== "doNothing") && (action === "save") && (!angular.isObject(data))) {
+							if ((options !== ".doNothing") && (action === "save") && (!angular.isObject(data))) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (angular.isObject(options)){
 									var params = (options.hasOwnProperty("params")) ? options.params.split(":") : [];
@@ -147,11 +166,11 @@
 						return $q(function(resolve,reject){
 							var results = {};
 
-							if ((options !== "doNothing") && (!angular.isObject(data))) {
+							if ((options !== ".doNothing") && (!angular.isObject(data))) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (action === "delete") {
-									if ((options === null) || (options === "$")) results[path] = data;
-									else results[path] = options;
+									if ((options === "$")) results[path] = data;
+									else results[path] = ((options === null) || (options === "null")) ? null : options;
 								} else if (action === "setNull") {
 									results[path] = null;
 								}
@@ -240,7 +259,7 @@
 
 							function runData(data,path,options,action){
 								var promises = [];
-								if (options.save.value !== "doNothing") {
+								if (options.save.value !== ".doNothing") {
 									if (action === "save") {
 										promises.push($q(function (resolve, reject) {
 											commands.saveValue(ref, "1", (path + "/" + options.save.key).split('/'), options.save.value, action).then(function (res) {
@@ -334,13 +353,12 @@
 				}).catch(function(err){reject(err)})
 			});
 
-
 			function createAction() {
 				f.debug("Create action.");
 				return $q(function(resolve,reject){
 					f.debug("Set action container.");
 					doAction.var[guid] = {
-						log: {"startedAt": moment()},   // set variable container with doActionId. Add action start time.
+						log: {"startedAt": getTime()},   // set variable container with doActionId. Add action start time.
 						objects: {},                    // object container
 						results: {},                    // main result to save database
 						appliedManifest: []             // manifest applied Effect
@@ -370,9 +388,10 @@
 					promises.push($q(function(resolve,reject) {
 						// check if object referance is sent.
 						if (!saveObject.ref) {
-							var err = {code: "F003", message: "Object referance not found! Please send object referance first."};
+							saveObject.ref = "";
+							/*var err = {code: "F003", message: "Object referance not found! Please send object referance first."};
 							endAction(err);
-							reject(err);return false;
+							reject(err);return false;*/
 						}
 						// check if object data is sent.
 						if (!saveObject.data) {
@@ -391,7 +410,7 @@
 							$action: (saveObject.data === "delete") ? "delete" : "save",  // set object action type.
 							$exists: {},                                                  // existing sent paths
 							$ids: {},                                                     // create object ids array
-							$ref: saveObject.ref.split('/'),                              // set object referance array
+							$ref: (saveObject.ref !== "" && saveObject.ref !== "/") ? saveObject.ref.split('/') : [],                              // set object referance array
 							$results: {}                                                  // create object results array,
 						};
 						if (saveObject.data !== "delete") doAction.var[guid].objects[saveObject.ref].$exists[saveObject.ref] = true;
@@ -587,7 +606,7 @@
 					promises.push($q(function(resolve,reject){
 						_replaceIDs(ref,key).then(function(keyRes){
 							_replaceIDs(ref,value).then(function(valueRes){
-								results[keyRes] = (preDefined.hasOwnProperty(valueRes)) ? preDefined[valueRes] : valueRes;
+								results[keyRes] = (mxFlatte.settings.predefined.hasOwnProperty(valueRes)) ? ((typeof mxFlatte.settings.predefined[valueRes] === "function") ? mxFlatte.settings.predefined[valueRes]() : mxFlatte.settings.predefined[valueRes]) : valueRes;
 								resolve();
 							}).catch(function(err){reject(err);return false;})
 						}).catch(function(err){reject(err);return false;})
@@ -614,7 +633,7 @@
 				}
 				return $q(function(resolve,reject){
 					$q.all(promises).then(function(){
-							resolve(result);
+						resolve((typeof result === "string") ? result.trim().replace(/(\/+)/g,'/').replace(/(^\/+)|(\/+$)/gi,"") : result);
 					})
 				});
 			}
@@ -630,8 +649,8 @@
 
 			function endAction(err) {
 				return $q(function(resolve,reject){
-					doAction.var[guid].log["endedAt"] = moment();
-					doAction.var[guid].log["duration"] = moment.duration(doAction.var[guid].log["endedAt"].diff(doAction.var[guid].log["startedAt"])).asMilliseconds() + " milliseconds";
+					doAction.var[guid].log["endedAt"] = getTime();
+					doAction.var[guid].log["duration"] = (doAction.var[guid].log["endedAt"] - doAction.var[guid].log["startedAt"]) + " milliseconds";
 					doAction.var[guid].log._error = (err || null);
 					resolve();
 				})
@@ -643,4 +662,3 @@
 	}
 
 }();
-
