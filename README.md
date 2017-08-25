@@ -1,18 +1,33 @@
 # Welcome to Flatte
-![alt text](https://flatte.maxabab.com/assets/images/logos/flatte%20logo_Header.png "Flatte Logo")
+![Flatte Logo](https://flatte.maxabab.com/assets/images/logos/flatte%20logo_Header.png "Flatte Logo") BETA
 
 Client-Side nosql Firebase Realtime Database save management. 
 
 ### Attention!
 This is a beta release. We have not finished all the tests yet.
 Some functions may not work as expected.
+
 **We do not recommend using flatte in your actual projects.**
+
+## Getting Started
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+### Prerequisites
+
+There are not many prerequisites required to build and run this project, but you'll need the following:
+
+* Firebase
+* AngularJs
+
+### Installing
+Coming soon...
 
 ## Demo 
 Easy and free registration
 [Flatte Manifesto Builder](https://flatte.maxabab.com)
 
-## Example
+## Basic Usage
 #### Javascript Code
 ```javascript
 flatte.do([
@@ -61,8 +76,24 @@ flatte.do([
 
 
 
-![alt text](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
+![Flatte Example Photo](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
+
+## Versioning
+
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [Flatte Web Tags](https://github.com/Flatte/Flatte-Web/tags). 
+
+
+## Contributing
+
+Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Authors
+
+* **Sezer Ekinci** - *Initial work* - [@micanose](https://github.com/micanose)
+* **Kaan Ekinci** - *Initial work* - [@kaanekinci](https://github.com/kaanekinci)
+
+See also the list of [contributors.md](https://github.com/Flatte/Flatte-Web/graphs/contributors) who participated in flatte.js.
 
 ## License
-- Flatte is licensed under the MIT license.
+- Flatte.Js is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
   - [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)
