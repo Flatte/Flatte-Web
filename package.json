@@ -1,18 +1,24 @@
 {
-  "name": "Flatte",
+  "name": "flatte",
   "version": "1.00.67",
+  "scripts": {"build": "gulp build"},
   "description": "Nosql denormalization management for Firebase",
-  "scripts": {
-    "build": "gulp build"
-  },
   "keywords": [
-    "flatte"
+    "Flatte",
+    "flattejs",
+    "denormalization",
+    "firebase",
+    "angularjs",
+    "transection",
+    "Json",
+    "Nosql",
+    "database",
+    "management"
   ],
   "repository": "https://github.com/Flatte/Flatte-Web",
   "author": "Sezer Ekinci, sezer@maxabab.com, Kaan Ekinci, kaan@maxabab.com",
-  "license": "Copyright 2017 maxabab adv",
+  "license": "Flatte is licensed under the MIT License - see the LICENSE file for details",
   "private": false,
-  "_libVersion": 55,
   "dependencies": {},
   "devDependencies": {
     "bower": "^1.8.0",

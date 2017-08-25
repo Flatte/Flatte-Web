@@ -21,7 +21,7 @@ There are not many prerequisites required to build and run this project, but you
 * AngularJs
 
 ### Installing
-Coming soon....
+Coming soon...
 
 ## Demo 
 Easy and free registration
@@ -92,8 +92,8 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 * **Sezer Ekinci** - *Initial work* - [@micanose](https://github.com/micanose)
 * **Kaan Ekinci** - *Initial work* - [@kaanekinci](https://github.com/kaanekinci)
 
-See also the list of [contributors](https://github.com/Flatte/Flatte-Web/graphs/contributors) who participated in flatte.js.
+See also the list of [contributors](https://github.com/Flatte/Flatte-Web/graphs/contributors) who participated in flatte.
 
 ## License
-- Flatte.Js is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+- Flatte is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
   - [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)

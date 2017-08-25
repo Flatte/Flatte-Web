@@ -1,7 +1,7 @@
 {
-  "name": "Flatte",
+  "name": "flatte",
   "version": "1.00.67",
-  "main": "dist/flatte.min.js",
+  "main": "dist/flatte.js",
   "description": "Nosql denormalization management for Firebase",
   "keywords": [
     "Flatte",
@@ -17,7 +17,7 @@
   ],
   "repository": "https://github.com/Flatte/Flatte-Web",
   "author": "Sezer Ekinci, sezer@maxabab.com, Kaan Ekinci, kaan@maxabab.com",
-  "license": "Copyright 2017 maxabab adv",
+	"license": "Flatte is licensed under the MIT License - see the LICENSE file for details",
   "private": false,
   "ignore": [
     "**/.*",
