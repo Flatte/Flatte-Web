@@ -1,5 +1,6 @@
 var
 	gulp = require('gulp'),
+	git = require('gulp-git'),
 	jsonEditor = require('gulp-json-editor'),
 	rename = require('gulp-rename'),
 	fs = require('fs'),
@@ -28,6 +29,7 @@ var buildProject = {};
 		gulp.src("./package.json")
 			.pipe(jsonEditor({'version': packageJson.version}))
 			.pipe(gulp.dest("./"))
+			.pipe(git.tag(packageJson.version))
 			.on('error',function(err){console.log("build: version package.json [Error]");callback(err)})
 			.on('finish',function(){console.log("build: version package.json [End]");callback()});
 	});

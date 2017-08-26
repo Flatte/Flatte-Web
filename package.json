@@ -1,6 +1,6 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.71",
+  "version": "1.0.1-beta.72",
   "scripts": {
     "build": "gulp build"
   },
