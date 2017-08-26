@@ -21,7 +21,7 @@ There are not many prerequisites required to build and run this project, but you
 * AngularJs
 
 ### Installing
-Coming soon...
+Coming soon....
 
 ## Demo 
 Easy and free registration
