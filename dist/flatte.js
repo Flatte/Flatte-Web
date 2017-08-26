@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.00.67 - Fri Aug 25 2017 20:42:24 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.00.68 - Sat Aug 26 2017 19:27:30 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -146,13 +146,16 @@
 					saveValue: function(ref,data,path,options,action){
 						return $q(function(resolve,reject){
 							var results = {};
-
 							if ((options !== ".doNothing") && (action === "save") && (!angular.isObject(data))) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (angular.isObject(options)){
-									var params = (options.hasOwnProperty("params")) ? options.params.split(":") : [];
-									params.unshift(data);
-									results[path] = $filter(options.filter).apply(this, params);
+									if (options.filter) {
+										var params = (options.hasOwnProperty("params")) ? options.params.split("|") : [];
+										params.unshift(data);
+										results[path] = $filter(options.filter).apply(this, params);
+									} else {
+										results[path] = data;
+									}
 								} else {
 									if ((options === null) || (options === "$")) results[path] = data;
 									else results[path] = options;
@@ -185,17 +188,17 @@
 
 							var results = {}, promises = [];
 
-							function runData(data,options,action){
+							function run(runRef,runData,options,action){
 								var promises = [];
 
 								promises.push($q(function (resolve, reject) {
-									commands.saveValue(ref, data, options.path.split('/'), options.saveValue, action).then(function (res) {
+									commands.saveValue(ref, runData, runRef, options.saveValue, action).then(function (res) {
 										angular.extend(results,res);
 										resolve();
 									}).catch(function(err){ reject(err); return false; });
 								}));
 								promises.push($q(function (resolve, reject) {
-									commands.deleteValue(ref, data, options.path.split('/'), options.deleteValue, action).then(function (res) {
+									commands.deleteValue(ref, runData, runRef, options.deleteValue, action).then(function (res) {
 										angular.extend(results,res);
 										resolve();
 									}).catch(function(err){ reject(err); return false; });
@@ -204,18 +207,18 @@
 								return $q.all(promises)
 							}
 
-							function loopData(data,options,action){
+							function loop(loopRef, loopData,options,action){
 								var promises = [];
 
-								if (angular.isObject(data)) {
-									angular.forEach(data,function(value,key){
+								if (angular.isObject(loopData)) {
+									angular.forEach(loopData,function(value,key){
 										promises.push($q(function (resolve, reject) {
-											loopData(value,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
+											loop(loopRef+'/'+key,value,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
 										}));
 									});
 								} else {
 									promises.push($q(function (resolve, reject) {
-										runData(data,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
+										run(loopRef,loopData,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
 									}));
 								}
 
@@ -225,7 +228,7 @@
 							if (options) {
 								options.map(function (o) {
 									promises.push($q(function (resolve, reject) {
-										loopData(data, o, action).then(function (res) { resolve(); }).catch(function(err){ reject(err); return false; });
+										loop(o.path,data, o, action).then(function (res) { resolve(); }).catch(function(err){ reject(err); return false; });
 									}));
 								});
 							}
@@ -526,8 +529,12 @@
 							if (!hasItem) {
 								if ((mxFlatte.settings.manifest.hasOwnProperty("id_index"))&&(mxFlatte.settings.manifest.id_index.hasOwnProperty(newPath.join('>')+">ID"))) {
 									var ID = mxFlatte.settings.manifest.id_index[newPath.join('>')+">ID"];
-									newPath.push(ID);
-									doAction.var[guid].objects[ref].$ids["#"+ID] = item;
+									if (ID) {
+										newPath.push(ID);
+										doAction.var[guid].objects[ref].$ids["#"+ID] = item;
+									} else {
+										notFound = (notFound || true)
+									}
 								} else {
 									notFound = (notFound || true)
 								}
@@ -562,18 +569,21 @@
 						action = "save";
 					}
 
+					manifest = false;
 					try {
 						manifest = eval("mxFlatte.settings.manifest.data"+((manifestPath.length > 0) ? "['"+manifestPath.join("'].childs['")+"']":"")+"._q");
-						if (manifest) doAction.var[guid].appliedManifest.push((manifestPath.length > 0) ? manifestPath.join("/") : "");
-					} catch(err) {reject(err);return false;}
+					} catch(err) {manifest = false; reject(err);return false;}
 
-					for(var command in commands){
-						promises.push($q(function(resolve,reject){
-							commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action).then(function(res){
-								$.extend(doAction.var[guid].objects[ref].$results,res);
-								resolve();
-							}).catch(function(err){reject(err);return false;})
-						}));
+					if (manifest) {
+						doAction.var[guid].appliedManifest.push((manifestPath.length > 0) ? manifestPath.join("/") : "");
+						for(var command in commands){
+							promises.push($q(function(resolve,reject){
+								commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action).then(function(res){
+									$.extend(doAction.var[guid].objects[ref].$results,res);
+									resolve();
+								}).catch(function(err){reject(err);return false;})
+							}));
+						}
 					}
 
 					$q.all(promises).then(function(){
