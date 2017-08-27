@@ -1,7 +1,7 @@
 # Welcome to Flatte
 ![Flatte Logo](https://flatte.maxabab.com/assets/images/logos/flatte%20logo_Header.png "Flatte Logo") BETA
 
-Client-Side nosql Firebase Realtime Database save management..
+Client-Side nosql Firebase Realtime Database save management.
 
 ### Attention!
 This is a beta release. We have not finished all the tests yet.

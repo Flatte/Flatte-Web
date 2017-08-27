@@ -17,7 +17,7 @@ var buildProject = {};
 !function () {
 	"use strict";
 
-	gulp.task('build',['build:upgradeVersion','build:packageVersion','build:bowerVersion','build:flatte','build:flatte.min']);
+	gulp.task('build',['build:upgradeVersion','build:packageVersion','build:bowerVersion','build:flatte','build:flatte.min','build:gitTag']);
 	gulp.task('build:upgradeVersion', function(callback){
 		var version = packageJson.version;
 		version = version.split('.');
@@ -29,7 +29,6 @@ var buildProject = {};
 		gulp.src("./package.json")
 			.pipe(jsonEditor({'version': packageJson.version}))
 			.pipe(gulp.dest("./"))
-			.pipe(git.tag(packageJson.version))
 			.on('error',function(err){console.log("build: version package.json [Error]");callback(err)})
 			.on('finish',function(){console.log("build: version package.json [End]");callback()});
 	});
@@ -48,7 +47,6 @@ var buildProject = {};
 			.on('error',function(err){console.log("build: flatte.js [Error]");callback(err)})
 			.on('finish',function(){console.log("build: flatte.js [End]");callback()});
 	});
-
 	gulp.task('build:flatte.min',function(callback){
 		gulp.src('src/flatte.js')
 			.pipe(uglify({mangle: {toplevel: true}, output: {comments: saveLicense}}))
@@ -58,6 +56,13 @@ var buildProject = {};
 			.pipe(gulp.dest('dist'))
 			.on('error',function(err){console.log("build: flatte.min.js [Error]");callback(err)})
 			.on('finish',function(){console.log("build: flatte.min.js [End]");callback()});
+	});
+	gulp.task('build:gitTag', function(callback){
+		gulp.src("./package.json")
+			.pipe(gulp.dest('./'))
+			.pipe(git.tag(packageJson.version))
+			.on('error',function(err){console.log("build: git tag [Error]");callback(err)})
+			.on('finish',function(){console.log("build: git tag [End]");callback()});
 	});
 
 }();

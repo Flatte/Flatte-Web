@@ -1,6 +1,6 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.73",
+  "version": "1.0.1-beta.76",
   "main": "dist/flatte.js",
   "description": "Nosql denormalization management for Firebase",
   "keywords": [
