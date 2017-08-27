@@ -57,12 +57,5 @@ var buildProject = {};
 			.on('error',function(err){console.log("build: flatte.min.js [Error]");callback(err)})
 			.on('finish',function(){console.log("build: flatte.min.js [End]");callback()});
 	});
-	gulp.task('gittag', function(callback){
-		gulp.src("./package.json")
-			.pipe(gulp.dest('./'))
-			.pipe(git.tag(packageJson.version))
-			.on('error',function(err){console.log("build: git tag [Error]");callback(err)})
-			.on('finish',function(){console.log("build: git tag [End]");callback()});
-	});
 
 }();
