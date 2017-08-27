@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.76 - Mon Aug 28 2017 00:01:46 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.76 - Mon Aug 28 2017 00:05:08 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT

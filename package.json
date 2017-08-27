@@ -1,8 +1,9 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.75",
+  "version": "1.0.1-beta.76",
   "scripts": {
-    "build": "gulp build"
+    "build": "gulp build",
+    "gittag": "gulp gittag"
   },
   "description": "Nosql denormalization management for Firebase",
   "keywords": [

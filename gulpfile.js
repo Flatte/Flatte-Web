@@ -17,7 +17,7 @@ var buildProject = {};
 !function () {
 	"use strict";
 
-	gulp.task('build',['build:upgradeVersion','build:packageVersion','build:bowerVersion','build:flatte','build:flatte.min','build:gitTag']);
+	gulp.task('build',['build:upgradeVersion','build:packageVersion','build:bowerVersion','build:flatte','build:flatte.min']);
 	gulp.task('build:upgradeVersion', function(callback){
 		var version = packageJson.version;
 		version = version.split('.');
@@ -57,7 +57,7 @@ var buildProject = {};
 			.on('error',function(err){console.log("build: flatte.min.js [Error]");callback(err)})
 			.on('finish',function(){console.log("build: flatte.min.js [End]");callback()});
 	});
-	gulp.task('build:gitTag', function(callback){
+	gulp.task('gittag', function(callback){
 		gulp.src("./package.json")
 			.pipe(gulp.dest('./'))
 			.pipe(git.tag(packageJson.version))
