@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.00.67 - Fri Aug 25 2017 20:42:24 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.79 - Tue Aug 29 2017 18:34:00 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -30,11 +30,13 @@
 			baseRef: "/",
 			conStatus: false,
 			con: null,
-			manifest: null,
+			manifest: [],
 			predefined: {
-				".timestamp": firebase.database.ServerValue.TIMESTAMP,  // firebase server timestamp creates double timestamp. Manifest Builder shows it as updated;
-				".auth": false,                         // who is doing this action
-				".id": function(){ return firebase.database().ref().push().key; }
+				".true": true,
+				".false": false,
+				".id": function(){ return firebase.database().ref().push().key; },
+				".timestamp": firebase.database.ServerValue.TIMESTAMP,
+				".auth": false
 			}
 		};
 
@@ -81,8 +83,8 @@
 		mxFlatte.checkConnection();
 	}
 
-	flatte.$inject = ['mxFlatte','$q','$filter'];
-	function flatte(mxFlatte,$q,$filter){
+	flatte.$inject = ['mxFlatte','$q','$filter','$timeout'];
+	function flatte(mxFlatte,$q,$filter,$timeout){
 		var f = this;
 		f.debug = debug;
 		f.serial = serial;
@@ -136,37 +138,118 @@
 					var date = new Date();
 					return date.valueOf();
 				},
-				guid = "GUID" + f.dbKey(),   // Create doActionId for debuging.
+				guid = "doID" + f.dbKey(),   // Create doActionId for debuging.
+				placeIDs = function(ref,from,to,prefix){
+					function findItem(ref,from,find){
+						return $q(function(resolve){
+							var findPromises = [],findResult = false;
+							from.map(function(item,index){
+								promises.push($q(function(resolve){
+									if (prefix + item === find) findResult = ref[index];
+									resolve();
+								}))
+							});
+							$q.all(promises).then( function() {
+								resolve(findResult)
+							}).catch(function(err){console.log(err)});
+						})
+					}
+					var promises = [], result = [];
+					to.map(function(item){
+						promises.push($q(function(resolve){
+							if (from) {
+								findItem(ref,from,item).then(function(res){
+									if (res) result.push(res); else result.push(item);
+									resolve();
+								})
+							} else {
+								result.push(item);
+								resolve();
+							}
+						}))
+					});
+					return $q(function(resolve){
+						$q.all(promises).then(function(){
+							resolve(result);
+						}).catch(function(err){console.log(err)});
+					});
+				},
 				commands = {
-					ID: function(ref,data,path,options,action){
+					ID: function(ref,data,path,options,action,manifestPath){
 						return $q(function(resolve,reject){
 							resolve();
 						})
 					},
-					saveValue: function(ref,data,path,options,action){
+					saveValue: function(ref,data,path,options,action,manifestPath){
 						return $q(function(resolve,reject){
+							function replace(results){
+								var promises = [], result = {}, newKey = "",newVal = "";
+								angular.forEach(results,function(value,key){
+									if (typeof key === "string") {
+										promises.push($q(function(resolve){ placeIDs(path.split('/'),manifestPath,key.split('/'),"#").then(function(res){ newKey = res.join('/'); resolve(); }); }));
+									} else {
+										newKey = key;
+									}
+									if (typeof value === "string") {
+										promises.push($q(function(resolve){ placeIDs(path.split('/'),manifestPath,value.split('/'),"#").then(function(res){ newVal = res.join('/'); resolve(); }); }));
+									} else {
+										newVal = value;
+									}
+								});
+								return $q(function(resolve){
+									$q.all(promises).then(function(res){
+										if (newKey!=="" && newVal!=="") result[newKey] = newVal;
+										resolve(result);
+									})
+								})
+							}
 							var results = {};
-
-							if ((options !== ".doNothing") && (action === "save") && (!angular.isObject(data))) {
+							if ((options !== ".doNothing") && (action === "save")/* && (!angular.isObject(data))*/) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (angular.isObject(options)){
-									var params = (options.hasOwnProperty("params")) ? options.params.split(":") : [];
-									params.unshift(data);
-									results[path] = $filter(options.filter).apply(this, params);
+									if (options.filter) {
+										var params = (options.hasOwnProperty("params")) ? options.params.split("|") : [];
+										params.unshift(data);
+										results[path] = $filter(options.filter).apply(this, params);
+									} else {
+										results[path] = data;
+									}
 								} else {
 									if ((options === null) || (options === "$")) results[path] = data;
 									else results[path] = options;
 								}
 							}
 
-							resolve(results);
+							replace(results).then(function(res){ resolve(res); });
 						})
 					},
-					deleteValue: function(ref,data,path,options,action){
+					deleteValue: function(ref,data,path,options,action,manifestPath){
 						return $q(function(resolve,reject){
+							function replace(results){
+								var promises = [], result = {}, newKey = "",newVal = "";
+								angular.forEach(results,function(value,key){
+									if (typeof key === "string") {
+										promises.push($q(function(resolve){ placeIDs(path.split('/'),manifestPath,key.split('/'),"#").then(function(res){ newKey = res.join('/'); resolve(); }); }));
+									} else {
+										newKey = key;
+									}
+									if (typeof value === "string") {
+										promises.push($q(function(resolve){ placeIDs(path.split('/'),manifestPath,value.split('/'),"#").then(function(res){ newVal = res.join('/'); resolve(); }); }));
+									} else {
+										newVal = value;
+									}
+								});
+								return $q(function(resolve){
+									$q.all(promises).then(function(res){
+										if (newKey!=="" && newVal!=="") result[newKey] = newVal;
+										resolve(result);
+									})
+								})
+							}
+
 							var results = {};
 
-							if ((options !== ".doNothing") && (!angular.isObject(data))) {
+							if ((options !== ".doNothing")/* && (!angular.isObject(data))*/) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
 								if (action === "delete") {
 									if ((options === "$")) results[path] = data;
@@ -176,46 +259,61 @@
 								}
 							}
 
-							resolve(results);
+							replace(results).then(function(res){ resolve(res); });
 						})
 					},
-					copy: function(ref,data,path,options,action){
+					copy: function(ref,data,path,options,action,manifestPath){
 						return $q(function(resolve,reject) {
 							if (!options) { resolve(); return false; }
 
 							var results = {}, promises = [];
 
-							function runData(data,options,action){
+							function run(runRef,runData,options,action){
 								var promises = [];
 
 								promises.push($q(function (resolve, reject) {
-									commands.saveValue(ref, data, options.path.split('/'), options.saveValue, action).then(function (res) {
-										angular.extend(results,res);
-										resolve();
-									}).catch(function(err){ reject(err); return false; });
+									placeIDs(path,manifestPath,runRef.split('/'),"#").then(function(resRef){
+										placeIDs(path,manifestPath,options.saveValue.split('/'),"#").then(function(resValue){
+											commands.saveValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+												angular.extend(results,res);
+												resolve();
+											}).catch(function(err){ reject(err); return false; });
+										});
+									});
 								}));
 								promises.push($q(function (resolve, reject) {
-									commands.deleteValue(ref, data, options.path.split('/'), options.deleteValue, action).then(function (res) {
-										angular.extend(results,res);
-										resolve();
-									}).catch(function(err){ reject(err); return false; });
+									placeIDs(path,manifestPath,runRef.split('/'),"#").then(function(resRef){
+										placeIDs(path,manifestPath,options.deleteValue.split('/'),"#").then(function(resValue){
+											commands.deleteValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+												angular.extend(results,res);
+												resolve();
+											}).catch(function(err){ reject(err); return false; });
+										});
+									});
 								}));
 
 								return $q.all(promises)
 							}
 
-							function loopData(data,options,action){
+							function loop(loopRef, loopData,options,action){
 								var promises = [];
 
-								if (angular.isObject(data)) {
-									angular.forEach(data,function(value,key){
+								if (
+									(
+										((action === "save") && ((options.saveValue === null) || (options.saveValue === "$") || (options.saveValue.trim() === ""))) ||
+										((action !== "save") && ((options.deleteValue === null) || (options.deleteValue === "$") || (options.deleteValue.trim() === "")))
+									) && angular.isObject(loopData)
+								) {
+									angular.forEach(loopData,function(value,key){
 										promises.push($q(function (resolve, reject) {
-											loopData(value,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
+											options.saveValue = (options.saveValue.trim() !== "") ? options.saveValue : "$";
+											options.deleteValue = (options.deleteValue.trim() !== "") ? options.deleteValue : "$";
+											loop(loopRef+'/'+key,value,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
 										}));
 									});
 								} else {
 									promises.push($q(function (resolve, reject) {
-										runData(data,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
+										run(loopRef,loopData,options,action).then(function (res) { resolve(res); }).catch(function(err){ reject(err); return false; });
 									}));
 								}
 
@@ -225,7 +323,7 @@
 							if (options) {
 								options.map(function (o) {
 									promises.push($q(function (resolve, reject) {
-										loopData(data, o, action).then(function (res) { resolve(); }).catch(function(err){ reject(err); return false; });
+										loop(o.path,data, o, action).then(function (res) { resolve(); }).catch(function(err){ reject(err); return false; });
 									}));
 								});
 							}
@@ -233,26 +331,38 @@
 							$q.all(promises).then(function(res){resolve(results)}).catch(function(err){ reject(err); return false; });
 						})
 					},
-					externalEffect: function(ref,data,path,options,action){
+					externalEffect: function(ref,data,path,options,action,manifestPath){
 						return $q(function(resolve,reject){
 							if (!options) { resolve(); return false; }
 
 							var results = {},promises = [];
 
 							function replace(option){
+								var promises = [],result = {path:"",if:{key:"",value:""},save:{key:"",value:""},delete:{key:"",value:""}};
+								if (!option.hasOwnProperty("path")) option.path = "";
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.path.split('/'),"#").then(function(res){ result.path = res.join('/'); resolve(); }); }));
+								if (!option.hasOwnProperty("if")) option.if = {key:"",value:""}; else {
+									if (!option.if.hasOwnProperty("key")) option.if.key = "";
+									if (!option.if.hasOwnProperty("value")) option.if.value = "";
+								}
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.if.key.split('/'),"#").then(function(res){ result.if.key = res.join('/'); resolve(); }); }));
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.if.value.split('/'),"#").then(function(res){ result.if.value = res.join('/'); resolve(); }); }));
+								if (!option.hasOwnProperty("save")) option.if = {key:"",value:""}; else {
+									if (!option.save.hasOwnProperty("key")) option.save.key = "";
+									if (!option.save.hasOwnProperty("value")) option.save.value = "";
+								}
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.save.key.split('/'),"#").then(function(res){ result.save.key = res.join('/'); resolve(); }); }));
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.save.value.split('/'),"#").then(function(res){ result.save.value = res.join('/'); resolve(); }); }));
+								if (!option.hasOwnProperty("delete")) option.delete = {key:"",value:""}; else {
+									if (!option.delete.hasOwnProperty("key")) option.delete.key = "";
+									if (!option.delete.hasOwnProperty("value")) option.delete.value = "";
+								}
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.delete.key.split('/'),"#").then(function(res){ result.delete.key = res.join('/'); resolve(); }); }));
+								promises.push($q(function(resolve){ placeIDs(path,manifestPath,option.delete.value.split('/'),"#").then(function(res){ result.delete.value = res.join('/'); resolve(); }); }));
+
 								return $q(function(resolve,reject){
-									_replace(ref,option).then(function(res){
-										option = res;
-										_replace(ref,option.if).then(function(res){
-											option.if = res;
-											_replaceIDs(ref,option.save.key).then(function(res){
-												option.save.key = res;
-												_replaceIDs(ref,option.delete.key).then(function(res){
-													option.delete.key = res;
-													resolve(option);
-												})
-											})
-										})
+									$q.all(promises).then(function(){
+										resolve(result)
 									})
 								})
 							}
@@ -262,8 +372,8 @@
 								if (options.save.value !== ".doNothing") {
 									if (action === "save") {
 										promises.push($q(function (resolve, reject) {
-											commands.saveValue(ref, "1", (path + "/" + options.save.key).split('/'), options.save.value, action).then(function (res) {
-												angular.extend(results, res);
+											commands.saveValue(ref, "1", (path + "/" + options.save.key).split('/'), options.save.value, action,manifestPath).then(function (res) {
+												if (!angular.equals(data,res)) angular.extend(results, res);
 												resolve();
 											}).catch(function (err) {
 												reject(err);
@@ -272,8 +382,8 @@
 										}));
 									} else {
 										promises.push($q(function (resolve, reject) {
-											commands.deleteValue(ref, data, (path + "/" + options.delete.key).split('/'), options.delete.value, action).then(function (res) {
-												angular.extend(results, res);
+											commands.deleteValue(ref, data, (path + "/" + options.delete.key).split('/'), options.delete.value, action,manifestPath).then(function (res) {
+												if (!angular.equals(data,res)) angular.extend(results, res);
 												resolve();
 											}).catch(function (err) {
 												reject(err);
@@ -311,8 +421,25 @@
 							})
 						})
 					},
-					function: function(ref,data,path,options,action){
-						function $function(flatte, $q, $ref, $data, $path, $action) {
+					function: function(ref,data,path,options,action,manifestPath){
+						function replace(results){
+							var promises = [], result = {}, newKey = "",newVal = "";
+							angular.forEach(results,function(value,key){
+								if (typeof key === "string") {
+									promises.push($q(function(resolve){ placeIDs(path,manifestPath,key.split('/'),"#").then(function(res){ newKey = res.join('/'); resolve(); }); }));
+								}
+								if (typeof value === "string") {
+									promises.push($q(function(resolve){ placeIDs(path,manifestPath,value.split('/'),"#").then(function(res){ newVal = res.join('/'); resolve(); }); }));
+								}
+							});
+							return $q(function(resolve){
+								$q.all(promises).then(function(res){
+									if (newKey!=="" && newVal!=="") result[newKey] = newVal;
+									resolve(result);
+								})
+							})
+						}
+						function $function(flatte, $q, $ref, $data, $path, $action, $manifestPath) {
 							return $q(function (resolve, reject) {
 								try {
 									var res = {};
@@ -322,7 +449,9 @@
 						}
 						return $q(function(resolve,reject){
 							if (options) {
-								$function(f, $q, ref, data, path, action).then(function (res) {resolve(res)}).catch(function (err) {reject(err);return false;});
+								$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
+									resolve(res)
+								}).catch(function (err) {reject(err);return false;});
 							} else {
 								resolve();
 							}
@@ -510,35 +639,45 @@
 			}
 
 			function createIdPaths(ref,path){
-				return $q(function(resolve,reject){
-					var
-						promises = [],
-						newPath = [],
-						hasItem = false,
-						notFound = false;
-					angular.forEach(path,function(item){
-						promises.push($q(function(resolve,reject){
-							try {
-								hasItem = eval("mxFlatte.settings.manifest.data"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
-							} catch(err){
-								hasItem = false;
-							}
-							if (!hasItem) {
-								if ((mxFlatte.settings.manifest.hasOwnProperty("id_index"))&&(mxFlatte.settings.manifest.id_index.hasOwnProperty(newPath.join('>')+">ID"))) {
-									var ID = mxFlatte.settings.manifest.id_index[newPath.join('>')+">ID"];
-									newPath.push(ID);
-									doAction.var[guid].objects[ref].$ids["#"+ID] = item;
-								} else {
-									notFound = (notFound || true)
-								}
-								resolve();
-							} else {
-								newPath.push(item);
-								resolve();
-							}
+				function findID(findPath){
+					var promises = [],ID = false;
+					angular.forEach(eval("mxFlatte.settings.manifest.data"+((findPath.length > 0) ? "['"+findPath.join("'].childs['")+"'].childs":"")),function(node,key){
+						promises.push($q(function(resolve,reject) {
+							if (node.hasOwnProperty("_q") && node._q.hasOwnProperty("ID")) ID = key;
+							resolve();
 						}));
 					});
-					return $q.all(promises).then(function(){
+					return $q(function(resolve){
+						$q.all(promises).then(function(res){resolve(ID)}).catch(function(err){reject(err);return false;})
+					})
+				}
+
+				var
+					promises = [],
+					newPath = [],
+					hasItem = false,
+					notFound = false;
+
+				angular.forEach(path,function(item){
+					promises.push(function(){return $q(function(resolve,reject){
+						try {
+							hasItem = eval("mxFlatte.settings.manifest.data"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
+						} catch(err){
+							hasItem = false;
+						}
+						if (!hasItem) {
+							findID(newPath).then(function(res){
+								if (res) newPath.push(res); else notFound = (notFound || true);
+								resolve();
+							}).catch(function(err){reject(err);return false;});
+						} else {
+							newPath.push(item);
+							resolve();
+						}
+					})});
+				});
+				return $q(function(resolve,reject){
+					f.serial(promises).then(function(){
 						resolve((!notFound) ? newPath : false);
 					}).catch(function(err){reject(err);return false;})
 				})
@@ -562,14 +701,15 @@
 						action = "save";
 					}
 
+					manifest = false;
 					try {
 						manifest = eval("mxFlatte.settings.manifest.data"+((manifestPath.length > 0) ? "['"+manifestPath.join("'].childs['")+"']":"")+"._q");
-						if (manifest) doAction.var[guid].appliedManifest.push((manifestPath.length > 0) ? manifestPath.join("/") : "");
-					} catch(err) {reject(err);return false;}
+					} catch(err) {manifest = false; reject(err);return false;}
 
+					if ((manifestPath.length > 0) && (!doAction.var[guid].appliedManifest.hasOwnProperty(manifestPath.join("/")))) doAction.var[guid].appliedManifest.push(manifestPath.join("/"));
 					for(var command in commands){
 						promises.push($q(function(resolve,reject){
-							commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action).then(function(res){
+							commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action,manifestPath).then(function(res){
 								$.extend(doAction.var[guid].objects[ref].$results,res);
 								resolve();
 							}).catch(function(err){reject(err);return false;})
@@ -583,58 +723,76 @@
 			}
 
 			function createFinalResults(){
-				var promises = [];
-				angular.forEach(doAction.var[guid].objects,function(object) {
-					promises.push($q(function (resolve, reject) {
-						_replace(object.ref, object.$results).then(function (res) {
-							doAction.var[guid].objects[object.ref].$results = res;
-							$.extend(doAction.var[guid].results,res);
-							resolve()
-						}).catch(function (err) {
-							reject(err);
-							return false;
+				function loopElimination(){
+					var promises = [];
+					function deleteOthers(objectRef,path){
+						var promises = [];
+						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
+							promises.push($q(function (resolve, reject) {
+								if ((key !== path) && (key.startsWith(path))) delete doAction.var[guid].objects[objectRef].$results[key];
+								resolve();
+							}));
 						});
-					}));
-				});
-				return $q.all(promises);
+						return $q(function(resolve,reject){
+							$q.all(promises).then(function(){ resolve(); }).catch(function (err) {reject(err);return false;});
+						});
+					}
+					function eliminate(objectRef){
+						var promises = [];
+						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
+							promises.push(function(){$q(function (resolve, reject) {
+								if (!angular.isObject(doAction.var[guid].objects[objectRef].$results[key])){
+									if (typeof doAction.var[guid].objects[objectRef].$results[key] !== "undefined") {
+										deleteOthers(objectRef, key).then(function (found) {
+											resolve();
+										}).catch(function (err) {reject(err);return false;});
+									}
+								} else {
+									delete doAction.var[guid].objects[objectRef].$results[key];
+									resolve();
+								}
+							})});
+						});
+						return f.serial(promises);
+					}
+					angular.forEach(doAction.var[guid].objects,function(object) {
+						promises.push($q(function (resolve, reject) {
+							eliminate(object.ref).then(function () {
+								resolve()
+							}).catch(function (err) {reject(err);return false;});
+						}));
+					});
+					return $q.all(promises);
+				}
+				function replace(){
+					var promises = [];
+					angular.forEach(doAction.var[guid].objects,function(object) {
+						promises.push($q(function (resolve, reject) {
+							replacePredefined(object.ref, object.$results).then(function (res) {
+								doAction.var[guid].objects[object.ref].$results = res;
+								$.extend(doAction.var[guid].results,res);
+								resolve();
+							}).catch(function (err) {reject(err);return false;});
+						}));
+					});
+					return $q.all(promises);
+				}
+
+				return f.serial([loopElimination,replace]);
 			}
 
-			function _replace(ref,data){
+			function replacePredefined(ref,data){
 				var promises = [],results = {};
 
 				angular.forEach(data,function(value,key){
 					promises.push($q(function(resolve,reject){
-						_replaceIDs(ref,key).then(function(keyRes){
-							_replaceIDs(ref,value).then(function(valueRes){
-								results[keyRes] = (mxFlatte.settings.predefined.hasOwnProperty(valueRes)) ? ((typeof mxFlatte.settings.predefined[valueRes] === "function") ? mxFlatte.settings.predefined[valueRes]() : mxFlatte.settings.predefined[valueRes]) : valueRes;
-								resolve();
-							}).catch(function(err){reject(err);return false;})
-						}).catch(function(err){reject(err);return false;})
+						results[key] = (mxFlatte.settings.predefined.hasOwnProperty(value)) ? ((typeof mxFlatte.settings.predefined[value] === "function") ? mxFlatte.settings.predefined[value]() : mxFlatte.settings.predefined[value]) : value;
+						resolve();
 					}));
 				});
 
 				return $q(function(resolve,reject){
-					$q.all(promises).then(function(){
-						resolve(results)
-					})
-				});
-			}
-
-			function _replaceIDs(ref,val){
-				var promises = [], result = angular.copy(val);
-				if (result && typeof result === "string") {
-					angular.forEach(doAction.var[guid].objects[ref].$ids, function (value, key) {
-						promises.push($q(function(resolve,reject){
-							var pattern = new RegExp(key.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), "g");
-							result = result.replace(pattern, value);
-							resolve();
-						}));
-					});
-				}
-				return $q(function(resolve,reject){
-					$q.all(promises).then(function(){
-						resolve((typeof result === "string") ? result.trim().replace(/(\/+)/g,'/').replace(/(^\/+)|(\/+$)/gi,"") : result);
-					})
+					$q.all(promises).then(function(){resolve(results)})
 				});
 			}
 
@@ -658,6 +816,7 @@
 		}
 		doAction.var = {};
 		doAction.getDebug = function () { return this.var; };
+		doAction.clearDebug = function () { this.var = {}; };
 
 	}
 

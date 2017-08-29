@@ -1,5 +1,6 @@
 var
 	gulp = require('gulp'),
+	git = require('gulp-git'),
 	jsonEditor = require('gulp-json-editor'),
 	rename = require('gulp-rename'),
 	fs = require('fs'),
@@ -46,7 +47,6 @@ var buildProject = {};
 			.on('error',function(err){console.log("build: flatte.js [Error]");callback(err)})
 			.on('finish',function(){console.log("build: flatte.js [End]");callback()});
 	});
-
 	gulp.task('build:flatte.min',function(callback){
 		gulp.src('src/flatte.js')
 			.pipe(uglify({mangle: {toplevel: true}, output: {comments: saveLicense}}))
