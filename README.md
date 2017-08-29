@@ -60,9 +60,6 @@ flatte.do([
         }
       }
     }
-  },
-  id_index{
-    "customer>ID":"customerID"
   }
 }
 ```
