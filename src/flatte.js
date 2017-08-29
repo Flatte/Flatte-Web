@@ -729,7 +729,7 @@
 						var promises = [];
 						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
 							promises.push($q(function (resolve, reject) {
-								if ((key !== path) && (key.startsWith(path))) delete doAction.var[guid].objects[objectRef].$results[key];
+								if (key.split('/').slice(0, path.split('/').length) === path) delete doAction.var[guid].objects[objectRef].$results[key];
 								resolve();
 							}));
 						});

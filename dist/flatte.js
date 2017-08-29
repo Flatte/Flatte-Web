@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.79 - Tue Aug 29 2017 18:34:00 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.80 - Wed Aug 30 2017 01:27:38 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -729,7 +729,7 @@
 						var promises = [];
 						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
 							promises.push($q(function (resolve, reject) {
-								if ((key !== path) && (key.startsWith(path))) delete doAction.var[guid].objects[objectRef].$results[key];
+								if (key.split('/').slice(0, path.split('/').length) === path) delete doAction.var[guid].objects[objectRef].$results[key];
 								resolve();
 							}));
 						});
