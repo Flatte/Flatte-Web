@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.78 - Tue Aug 29 2017 01:44:10 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.79 - Tue Aug 29 2017 18:34:00 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -32,9 +32,11 @@
 			con: null,
 			manifest: [],
 			predefined: {
-				".timestamp": firebase.database.ServerValue.TIMESTAMP,  // firebase server timestamp creates double timestamp. Manifest Builder shows it as updated;
-				".auth": false,                         // who is doing this action
-				".id": function(){ return firebase.database().ref().push().key; }
+				".true": true,
+				".false": false,
+				".id": function(){ return firebase.database().ref().push().key; },
+				".timestamp": firebase.database.ServerValue.TIMESTAMP,
+				".auth": false
 			}
 		};
 
@@ -136,7 +138,7 @@
 					var date = new Date();
 					return date.valueOf();
 				},
-				guid = "GUID" + f.dbKey(),   // Create doActionId for debuging.
+				guid = "doID" + f.dbKey(),   // Create doActionId for debuging.
 				placeIDs = function(ref,from,to,prefix){
 					function findItem(ref,from,find){
 						return $q(function(resolve){
@@ -371,7 +373,7 @@
 									if (action === "save") {
 										promises.push($q(function (resolve, reject) {
 											commands.saveValue(ref, "1", (path + "/" + options.save.key).split('/'), options.save.value, action,manifestPath).then(function (res) {
-												angular.extend(results, res);
+												if (!angular.equals(data,res)) angular.extend(results, res);
 												resolve();
 											}).catch(function (err) {
 												reject(err);
@@ -381,7 +383,7 @@
 									} else {
 										promises.push($q(function (resolve, reject) {
 											commands.deleteValue(ref, data, (path + "/" + options.delete.key).split('/'), options.delete.value, action,manifestPath).then(function (res) {
-												angular.extend(results, res);
+												if (!angular.equals(data,res)) angular.extend(results, res);
 												resolve();
 											}).catch(function (err) {
 												reject(err);
@@ -432,12 +434,12 @@
 							});
 							return $q(function(resolve){
 								$q.all(promises).then(function(res){
-									if (newKey && newVal) result[newKey] = newVal;
+									if (newKey!=="" && newVal!=="") result[newKey] = newVal;
 									resolve(result);
 								})
 							})
 						}
-						function $function(flatte, $q, $ref, $data, $path, $action) {
+						function $function(flatte, $q, $ref, $data, $path, $action, $manifestPath) {
 							return $q(function (resolve, reject) {
 								try {
 									var res = {};
@@ -448,7 +450,7 @@
 						return $q(function(resolve,reject){
 							if (options) {
 								$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
-									replace(res).then(function(res){ resolve(res) });
+									resolve(res)
 								}).catch(function (err) {reject(err);return false;});
 							} else {
 								resolve();
@@ -637,40 +639,45 @@
 			}
 
 			function createIdPaths(ref,path){
-				return $q(function(resolve,reject){
-					var
-						promises = [],
-						newPath = [],
-						hasItem = false,
-						notFound = false;
-
-					angular.forEach(path,function(item){
-						promises.push($q(function(resolve,reject){
-							try {
-								hasItem = eval("mxFlatte.settings.manifest.data"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
-							} catch(err){
-								hasItem = false;
-							}
-							if (!hasItem) {
-								if ((mxFlatte.settings.manifest.hasOwnProperty("id_index"))&&(mxFlatte.settings.manifest.id_index.hasOwnProperty(newPath.join('>')+">ID"))) {
-									var ID = mxFlatte.settings.manifest.id_index[newPath.join('>')+">ID"];
-									if (ID) {
-										newPath.push(ID);
-										//doAction.var[guid].objects[ref].$ids["#"+ID] = item;
-									} else {
-										notFound = (notFound || true)
-									}
-								} else {
-									notFound = (notFound || true)
-								}
-								resolve();
-							} else {
-								newPath.push(item);
-								resolve();
-							}
+				function findID(findPath){
+					var promises = [],ID = false;
+					angular.forEach(eval("mxFlatte.settings.manifest.data"+((findPath.length > 0) ? "['"+findPath.join("'].childs['")+"'].childs":"")),function(node,key){
+						promises.push($q(function(resolve,reject) {
+							if (node.hasOwnProperty("_q") && node._q.hasOwnProperty("ID")) ID = key;
+							resolve();
 						}));
 					});
-					return $q.all(promises).then(function(){
+					return $q(function(resolve){
+						$q.all(promises).then(function(res){resolve(ID)}).catch(function(err){reject(err);return false;})
+					})
+				}
+
+				var
+					promises = [],
+					newPath = [],
+					hasItem = false,
+					notFound = false;
+
+				angular.forEach(path,function(item){
+					promises.push(function(){return $q(function(resolve,reject){
+						try {
+							hasItem = eval("mxFlatte.settings.manifest.data"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
+						} catch(err){
+							hasItem = false;
+						}
+						if (!hasItem) {
+							findID(newPath).then(function(res){
+								if (res) newPath.push(res); else notFound = (notFound || true);
+								resolve();
+							}).catch(function(err){reject(err);return false;});
+						} else {
+							newPath.push(item);
+							resolve();
+						}
+					})});
+				});
+				return $q(function(resolve,reject){
+					f.serial(promises).then(function(){
 						resolve((!notFound) ? newPath : false);
 					}).catch(function(err){reject(err);return false;})
 				})
@@ -809,6 +816,7 @@
 		}
 		doAction.var = {};
 		doAction.getDebug = function () { return this.var; };
+		doAction.clearDebug = function () { this.var = {}; };
 
 	}
 
