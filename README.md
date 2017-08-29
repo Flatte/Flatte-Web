@@ -39,15 +39,15 @@ flatte.do([
 ```
 
 #### Manifesto Json
-```javascript
+```json
 {
-  data:{
+  "data":{
     "customer": {
       "childs": {
         "customerID": {
           "_q": {
             "ID": true
-          }
+          },
           "childs": {
             "firstName": {
               "_q": {
@@ -60,9 +60,6 @@ flatte.do([
         }
       }
     }
-  },
-  id_index{
-    "customer>ID":"customerID"
   }
 }
 ```
