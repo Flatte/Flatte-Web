@@ -2,7 +2,7 @@
  *
  * Nosql denormalization management for Firabase
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.81 - Thu Aug 31 2017 02:19:33 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.82 - Fri Sep 01 2017 16:24:07 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -362,11 +362,15 @@
 
 								return $q(function(resolve,reject){
 									$q.all(promises).then(function(){
-										var
-											match = result.if.value.replace(/\([^\)]*\)/g, '()'),
-											params = result.if.value.match(/\([^\)]*\)/g);
-										if (match) match = match.replace('()', '');
-										if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g,'');
+										var params,match;
+										if (typeof result.if.value === "string") {
+											match = (result.if.value.replace(/\([^\)]*\)/g, '()')) ? result.if.value.replace(/\([^\)]*\)/g, '()').replace('()', '') : result.if.value;
+											if (match) params = result.if.value.match(/\([^\)]*\)/g);
+											if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g,'');
+										} else {
+											match = result.if.value;
+										}
+
 										result.if.value = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[result.if.value]) : result.if.value;
 										resolve(result)
 									})
@@ -505,10 +509,13 @@
 				return $q(function(resolve,reject){
 					f.debug("Set action container.");
 					doAction.var[guid] = {
-						log: {"startedAt": getTime()},   // set variable container with doActionId. Add action start time.
+						log: {"startedAt": getTime()},  // set variable container with doActionId. Add action start time.
 						objects: {},                    // object container
 						results: {},                    // main result to save database
-						appliedManifest: []             // manifest applied Effect
+						appliedManifest: [],            // manifest applied Effect
+						eliminatedCodes: [
+							"01 - Parent result has been found."
+						]
 					};
 
 					f.debug("Check sent data");
@@ -560,7 +567,8 @@
 							$exists: {},                                                  // existing sent paths
 							$ids: {},                                                     // create object ids array
 							$ref: (saveObject.ref !== "" && saveObject.ref !== "/") ? saveObject.ref.split('/') : [],                              // set object referance array
-							$results: {}                                                  // create object results array,
+							$results: {},                                                  // create object results array
+							$eliminateds: {}
 						};
 						if (saveObject.data !== "delete") doAction.var[guid].objects[saveObject.ref].$exists[saveObject.ref] = true;
 						createLoopData(doAction.var[guid].objects[saveObject.ref]).then(function(){
@@ -766,7 +774,10 @@
 						var promises = [];
 						Object.keys(doAction.var[guid].objects[objectRef].$results).reverse().map(function(key) {
 							promises.push($q(function (resolve, reject) {
-								if ((key !== path) && (key.split('/').slice(0, path.split('/').length).join('/') === path)) delete doAction.var[guid].objects[objectRef].$results[key];
+								if ((key !== path) && (key.split('/').slice(0, path.split('/').length).join('/') === path)) {
+									doAction.var[guid].objects[objectRef].$eliminateds[key] = "[01] " + doAction.var[guid].objects[objectRef].$results[key];
+									delete doAction.var[guid].objects[objectRef].$results[key];
+								}
 								resolve();
 							}));
 						});
@@ -823,11 +834,14 @@
 
 				angular.forEach(data,function(value,key){
 					promises.push($q(function(resolve,reject){
-						var
-							match = value.replace(/\([^\)]*\)/g, '()'),
-							params = value.match(/\([^\)]*\)/g);
-						if (match) match = match.replace('()', ''); else (match = value);
-						if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g,'');
+						var params,match;
+						if (typeof value === "string") {
+							match = (value.replace(/\([^\)]*\)/g, '()')) ? value.replace(/\([^\)]*\)/g, '()').replace('()', '') : value;
+							if (match) params = value.match(/\([^\)]*\)/g);
+							if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g, '');
+						} else {
+							match = value;
+						}
 
 						results[key] = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[match]) : match;
 						resolve();
