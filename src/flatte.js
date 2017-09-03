@@ -129,6 +129,18 @@
 			});
 			return prevPromise || $q.when();
 		}
+		function deepExtend(destination, source) {
+			for (var property in source) {
+				if (source[property] && source[property].constructor &&
+					source[property].constructor === Object) {
+					destination[property] = destination[property] || {};
+					deepExtend(destination[property], source[property]);
+				} else {
+					destination[property] = source[property];
+				}
+			}
+			return destination;
+		}
 
 		/* Fb Do Functions */
 		function doAction (saveObjects,progress){
@@ -249,9 +261,9 @@
 
 							var results = {};
 
-							if ((options !== ".doNothing")/* && (!angular.isObject(data))*/) {
+							if (action !== "save"/* && (!angular.isObject(data))*/) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
-								if (action === "delete") {
+								if ((options !== ".doNothing") && (action === "delete")) {
 									if ((options === "$")) results[path] = data;
 									else results[path] = ((options === null) || (options === "null")) ? null : options;
 								} else if (action === "setNull") {
@@ -366,7 +378,7 @@
 										if (typeof result.if.value === "string") {
 											match = (result.if.value.replace(/\([^\)]*\)/g, '()')) ? result.if.value.replace(/\([^\)]*\)/g, '()').replace('()', '') : result.if.value;
 											if (match) params = result.if.value.match(/\([^\)]*\)/g);
-											if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g,'');
+											if (params) params = params[0].replace('(', '').replace(')', '');
 										} else {
 											match = result.if.value;
 										}
@@ -583,7 +595,11 @@
 			function getDbData(ref){
 				return $q(function(resolve,reject){
 					firebase.database().ref(f.baseRef()+"/"+ref).once("value",function(snap){
-						resolve((snap.val() || {}));
+						var result = {};
+						angular.forEach(snap.val(),function(item,key){
+							result[key] = item;
+						});
+						resolve(result);
 					},function(err){reject(err);return false;})
 				});
 			}
@@ -617,7 +633,7 @@
 						getDbData(object.ref).then(function (dbData) {
 							if (object.set) {
 								createExists(object.ref,object.data,object.$ref).then(function(){
-									doAction.var[guid].objects[object.ref].data = angular.extend(dbData, doAction.var[guid].objects[object.ref].data);
+									doAction.var[guid].objects[object.ref].data = deepExtend(dbData, doAction.var[guid].objects[object.ref].data);
 									resolve()
 								}).catch(function (err) {reject(err);return false;});
 							} else {
@@ -838,7 +854,7 @@
 						if (typeof value === "string") {
 							match = (value.replace(/\([^\)]*\)/g, '()')) ? value.replace(/\([^\)]*\)/g, '()').replace('()', '') : value;
 							if (match) params = value.match(/\([^\)]*\)/g);
-							if (params) params = params[0].replace('(', '').replace(')', '').replace(/(\")|(\')/g, '');
+							if (params) params = params[0].replace('(', '').replace(')', '');
 						} else {
 							match = value;
 						}
