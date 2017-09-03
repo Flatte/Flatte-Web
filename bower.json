@@ -1,6 +1,6 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.80",
+  "version": "1.0.1-beta.83",
   "main": "dist/flatte.js",
   "description": "Nosql denormalization management for Firebase",
   "keywords": [
@@ -29,6 +29,7 @@
     "angular": "~1.5.7",
     "angular-sanitize": "~1.5.7",
     "angular-ui-router": "~0.2.15",
-    "firebase": "^3.6.4"
+    "firebase": "^3.6.4",
+    "angular-mocks": "1.5.7"
   }
 }

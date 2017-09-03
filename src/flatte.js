@@ -93,7 +93,7 @@
 		f.dbTime = function(){ return firebase.database.ServerValue.TIMESTAMP };
 		f.dbKey = function(){ return firebase.database().ref().push().key };
 		f.cleanData = function(data){ return JSON.parse(JSON.serialize(data)) };
-		f.setManifest = function(manifest){mxFlatte.settings.manifest = manifest};
+		f.setManifest = function(manifest){mxFlatte.settings.manifest = angular.copy(manifest)};
 		f.setPredefined = function(newData){
 			mxFlatte.settings.predefined = newData;
 		};
@@ -129,9 +129,21 @@
 			});
 			return prevPromise || $q.when();
 		}
+		function deepExtend(destination, source) {
+			for (var property in source) {
+				if (source[property] && source[property].constructor &&
+					source[property].constructor === Object) {
+					destination[property] = destination[property] || {};
+					deepExtend(destination[property], source[property]);
+				} else {
+					destination[property] = source[property];
+				}
+			}
+			return destination;
+		}
 
 		/* Fb Do Functions */
-		function doAction (saveObjects){
+		function doAction (saveObjects,progress){
 			f.debug("flatte.do() called...");
 			var
 				getTime = function(){
@@ -249,9 +261,9 @@
 
 							var results = {};
 
-							if ((options !== ".doNothing")/* && (!angular.isObject(data))*/) {
+							if (action !== "save"/* && (!angular.isObject(data))*/) {
 								path = (angular.isObject(path)) ? path.join("/") : path;
-								if (action === "delete") {
+								if ((options !== ".doNothing") && (action === "delete")) {
 									if ((options === "$")) results[path] = data;
 									else results[path] = ((options === null) || (options === "null")) ? null : options;
 								} else if (action === "setNull") {
@@ -362,6 +374,16 @@
 
 								return $q(function(resolve,reject){
 									$q.all(promises).then(function(){
+										var params,match;
+										if (typeof result.if.value === "string") {
+											match = (result.if.value.replace(/\([^\)]*\)/g, '()')) ? result.if.value.replace(/\([^\)]*\)/g, '()').replace('()', '') : result.if.value;
+											if (match) params = result.if.value.match(/\([^\)]*\)/g);
+											if (params) params = params[0].replace('(', '').replace(')', '');
+										} else {
+											match = result.if.value;
+										}
+
+										result.if.value = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[result.if.value]) : result.if.value;
 										resolve(result)
 									})
 								})
@@ -468,6 +490,10 @@
 					endAction
 				];
 
+			progress[guid] = {total:8};
+			progress[guid].count = 0;
+			progress[guid].message = "Pending...";
+
 			return $q(function(resolve,reject){
 				f.serial(tasks).then(function(){
 					if (mxFlatte.settings.debug) {
@@ -479,18 +505,29 @@
 						resolve();
 					}
 					f.debug("flatte.do() ended with success");
-				}).catch(function(err){reject(err)})
+					progress[guid].count++;
+					progress[guid].message = "End action...";
+				}).catch(function(err){
+					endAction(err);
+					reject(err);
+					f.debug("flatte.do() ended with error");
+				})
 			});
 
 			function createAction() {
 				f.debug("Create action.");
+				progress[guid].count++;
+				progress[guid].message = "Create action...";
 				return $q(function(resolve,reject){
 					f.debug("Set action container.");
 					doAction.var[guid] = {
-						log: {"startedAt": getTime()},   // set variable container with doActionId. Add action start time.
+						log: {"startedAt": getTime()},  // set variable container with doActionId. Add action start time.
 						objects: {},                    // object container
 						results: {},                    // main result to save database
-						appliedManifest: []             // manifest applied Effect
+						appliedManifest: [],            // manifest applied Effect
+						eliminatedCodes: [
+							"01 - Parent result has been found."
+						]
 					};
 
 					f.debug("Check sent data");
@@ -506,12 +543,14 @@
 						endAction(err);
 						reject(err);return false;
 					}
-
 					resolve()
 				});
 			}
 
 			function createObjects(){
+				f.debug("Create objects.");
+				progress[guid].count++;
+				progress[guid].message = "Create objects...";
 				var promises = [];
 				angular.forEach(saveObjects, function (saveObject) {
 					promises.push($q(function(resolve,reject) {
@@ -540,10 +579,13 @@
 							$exists: {},                                                  // existing sent paths
 							$ids: {},                                                     // create object ids array
 							$ref: (saveObject.ref !== "" && saveObject.ref !== "/") ? saveObject.ref.split('/') : [],                              // set object referance array
-							$results: {}                                                  // create object results array,
+							$results: {},                                                  // create object results array
+							$eliminateds: {}
 						};
 						if (saveObject.data !== "delete") doAction.var[guid].objects[saveObject.ref].$exists[saveObject.ref] = true;
-						createLoopData(doAction.var[guid].objects[saveObject.ref]).then(function(){resolve()}).catch(function(err){reject(err);return false;});
+						createLoopData(doAction.var[guid].objects[saveObject.ref]).then(function(){
+							resolve()
+						}).catch(function(err){reject(err);return false;});
 					}));
 				});
 
@@ -553,7 +595,11 @@
 			function getDbData(ref){
 				return $q(function(resolve,reject){
 					firebase.database().ref(f.baseRef()+"/"+ref).once("value",function(snap){
-						resolve((snap.val() || {}));
+						var result = {};
+						angular.forEach(snap.val(),function(item,key){
+							result[key] = item;
+						});
+						resolve(result);
 					},function(err){reject(err);return false;})
 				});
 			}
@@ -566,7 +612,9 @@
 						newPath.push(key);
 						doAction.var[guid].objects[ref].$exists[newPath.join('/')] = true;
 						if (angular.isObject(item)) {
-							createExists(ref,item,newPath).then(function(){resolve()}).catch(function(err){reject(err);return false;});
+							createExists(ref,item,newPath).then(function(){
+								resolve()
+							}).catch(function(err){reject(err);return false;});
 						} else {
 							resolve()
 						}
@@ -577,12 +625,15 @@
 			}
 
 			function createLoopData(object) {
+				f.debug("Create loop data.");
+				progress[guid].count++;
+				progress[guid].message = "Create loop data...";
 				return $q(function(resolve,reject) {
 					if ((object.$action !== "save") || (object.set)) {
 						getDbData(object.ref).then(function (dbData) {
 							if (object.set) {
 								createExists(object.ref,object.data,object.$ref).then(function(){
-									doAction.var[guid].objects[object.ref].data = angular.extend(dbData, doAction.var[guid].objects[object.ref].data);
+									doAction.var[guid].objects[object.ref].data = deepExtend(dbData, doAction.var[guid].objects[object.ref].data);
 									resolve()
 								}).catch(function (err) {reject(err);return false;});
 							} else {
@@ -597,6 +648,9 @@
 			}
 
 			function perform(){
+				f.debug("Perform.");
+				progress[guid].count++;
+				progress[guid].message = "Perform...";
 				var promises = [];
 				angular.forEach(doAction.var[guid].objects,function(object){
 					promises.push($q(function(resolve,reject){
@@ -622,7 +676,9 @@
 					newPath.push(key);
 					promises.push($q(function(resolve,reject){
 						if (angular.isObject(item)) {
-							loopData(ref,item,newPath).then(function(){resolve()}).catch(function(err){reject(err);return false;});
+							loopData(ref,item,newPath).then(function(){
+								resolve()
+							}).catch(function(err){reject(err);return false;});
 						} else {
 							resolve()
 						}
@@ -697,6 +753,8 @@
 						)
 					) {
 						action = "delete";
+					} else if (data === null) {
+						action = "delete";
 					} else {
 						action = "save";
 					}
@@ -717,19 +775,25 @@
 					}
 
 					$q.all(promises).then(function(){
-						resolve();
+						resolve()
 					}).catch(function(err){reject(err);return false;})
 				})
 			}
 
 			function createFinalResults(){
+				f.debug("Create final results.");
+				progress[guid].count++;
+				progress[guid].message = "Create final results...";
 				function loopElimination(){
 					var promises = [];
 					function deleteOthers(objectRef,path){
 						var promises = [];
-						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
+						Object.keys(doAction.var[guid].objects[objectRef].$results).reverse().map(function(key) {
 							promises.push($q(function (resolve, reject) {
-								if (key.split('/').slice(0, path.split('/').length) === path) delete doAction.var[guid].objects[objectRef].$results[key];
+								if ((key !== path) && (key.split('/').slice(0, path.split('/').length).join('/') === path)) {
+									doAction.var[guid].objects[objectRef].$eliminateds[key] = "[01] " + doAction.var[guid].objects[objectRef].$results[key];
+									delete doAction.var[guid].objects[objectRef].$results[key];
+								}
 								resolve();
 							}));
 						});
@@ -739,7 +803,7 @@
 					}
 					function eliminate(objectRef){
 						var promises = [];
-						Object.keys(doAction.var[guid].objects[objectRef].$results).sort().map(function(key) {
+						Object.keys(doAction.var[guid].objects[objectRef].$results).reverse().map(function(key) {
 							promises.push(function(){$q(function (resolve, reject) {
 								if (!angular.isObject(doAction.var[guid].objects[objectRef].$results[key])){
 									if (typeof doAction.var[guid].objects[objectRef].$results[key] !== "undefined") {
@@ -768,10 +832,10 @@
 					var promises = [];
 					angular.forEach(doAction.var[guid].objects,function(object) {
 						promises.push($q(function (resolve, reject) {
-							replacePredefined(object.ref, object.$results).then(function (res) {
+							replacePredefined(object.$results).then(function (res) {
 								doAction.var[guid].objects[object.ref].$results = res;
 								$.extend(doAction.var[guid].results,res);
-								resolve();
+								resolve()
 							}).catch(function (err) {reject(err);return false;});
 						}));
 					});
@@ -781,36 +845,54 @@
 				return f.serial([loopElimination,replace]);
 			}
 
-			function replacePredefined(ref,data){
+			function replacePredefined(data){
 				var promises = [],results = {};
 
 				angular.forEach(data,function(value,key){
 					promises.push($q(function(resolve,reject){
-						results[key] = (mxFlatte.settings.predefined.hasOwnProperty(value)) ? ((typeof mxFlatte.settings.predefined[value] === "function") ? mxFlatte.settings.predefined[value]() : mxFlatte.settings.predefined[value]) : value;
+						var params,match;
+						if (typeof value === "string") {
+							match = (value.replace(/\([^\)]*\)/g, '()')) ? value.replace(/\([^\)]*\)/g, '()').replace('()', '') : value;
+							if (match) params = value.match(/\([^\)]*\)/g);
+							if (params) params = params[0].replace('(', '').replace(')', '');
+						} else {
+							match = value;
+						}
+
+						results[key] = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[match]) : match;
 						resolve();
 					}));
 				});
 
 				return $q(function(resolve,reject){
-					$q.all(promises).then(function(){resolve(results)})
+					$q.all(promises).then(function(){
+						resolve(results)
+					})
 				});
 			}
 
 			function update() {
 				f.debug("Run Update.");
+				progress[guid].count++;
+				progress[guid].message = "Run results...";
 				return $q(function(resolve,reject){
-					firebase.database().ref(f.baseRef()).update(doAction.var[guid].results,function(err){
-						if (err) reject(err); else resolve()
-					});
+					try {
+						firebase.database().ref(f.baseRef()).update(doAction.var[guid].results,function(err){
+							if (err) reject(err); else {
+								resolve()
+							}
+						});
+					} catch(err){reject(err)}
 				})
 			}
 
 			function endAction(err) {
+				f.debug("End action.");
 				return $q(function(resolve,reject){
 					doAction.var[guid].log["endedAt"] = getTime();
 					doAction.var[guid].log["duration"] = (doAction.var[guid].log["endedAt"] - doAction.var[guid].log["startedAt"]) + " milliseconds";
 					doAction.var[guid].log._error = (err || null);
-					resolve();
+					resolve()
 				})
 			}
 		}
