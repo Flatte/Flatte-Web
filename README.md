@@ -36,7 +36,7 @@ If you don't want to use bower or cdn, you can manually download the latest vers
 
 Inject flatte in your angularjs module.
 ```javascript
-angular.module('myApp',['flatte'])
+angular.module('myApp',['mx.flatte'])
 ```
 
 Set configurations.
