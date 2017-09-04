@@ -9,6 +9,8 @@ Some functions may not work as expected.
 
 **We do not recommend using flatte in your actual projects.**
 
+_Do not hasitate to open an issue. We are waiting for your collaborations to bring this project to a higher level. We are paying attentions on feedbacks._
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
