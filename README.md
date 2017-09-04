@@ -107,6 +107,8 @@ angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
 }]);
 ```
 
+##### [Example fiddle](https://jsfiddle.net/micanose/pq8t5unx/9/)
+
 ##### Results
 | Incoming data                                    | Recorded data                                    |
 |--------------------------------------------------|--------------------------------------------------|
@@ -115,10 +117,7 @@ angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
 | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
 |                                                  | **contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
 
-
-
 ![Flatte Example Photo](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
-
 
 ## Versioning
 

@@ -2,7 +2,7 @@
  *
  * Client-Side nosql Firebase Realtime Database save management.
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.84 - Mon Sep 04 2017 04:26:33 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.85 - Mon Sep 04 2017 13:54:19 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -457,9 +457,9 @@
 					endAction
 				];
 
-			progress[guid] = {total:8};
-			progress[guid].count = 0;
-			progress[guid].message = "Pending...";
+			if (progress) progress[guid] = {total:8};
+			if (progress) progress[guid].count = 0;
+			if (progress) progress[guid].message = "Pending...";
 
 			return $q(function(resolve,reject){
 				f.serial(tasks).then(function(){
@@ -472,8 +472,8 @@
 						resolve();
 					}
 					f.debug("flatte.do() ended with success");
-					progress[guid].count++;
-					progress[guid].message = "End action...";
+					if (progress) progress[guid].count++;
+					if (progress) progress[guid].message = "End action...";
 				}).catch(function(err){
 					endAction(err);
 					reject(err);
@@ -483,8 +483,8 @@
 
 			function createAction() {
 				f.debug("Create action.");
-				progress[guid].count++;
-				progress[guid].message = "Create action...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Create action...";
 				return $q(function(resolve,reject){
 					f.debug("Set action container.");
 					doAction.var[guid] = {
@@ -516,8 +516,8 @@
 
 			function createObjects(){
 				f.debug("Create objects.");
-				progress[guid].count++;
-				progress[guid].message = "Create objects...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Create objects...";
 				var promises = [];
 				angular.forEach(saveObjects, function (saveObject) {
 					promises.push($q(function(resolve,reject) {
@@ -593,8 +593,8 @@
 
 			function createLoopData(object) {
 				f.debug("Create loop data.");
-				progress[guid].count++;
-				progress[guid].message = "Create loop data...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Create loop data...";
 				return $q(function(resolve,reject) {
 					if ((object.$action !== "save") || (object.set)) {
 						getDbData(object.ref).then(function (dbData) {
@@ -616,8 +616,8 @@
 
 			function perform(){
 				f.debug("Perform.");
-				progress[guid].count++;
-				progress[guid].message = "Perform...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Perform...";
 				var promises = [];
 				angular.forEach(doAction.var[guid].objects,function(object){
 					promises.push($q(function(resolve,reject){
@@ -749,8 +749,8 @@
 
 			function createFinalResults(){
 				f.debug("Create final results.");
-				progress[guid].count++;
-				progress[guid].message = "Create final results...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Create final results...";
 				function loopElimination(){
 					var promises = [];
 					function deleteOthers(objectRef,path){
@@ -840,8 +840,8 @@
 
 			function update() {
 				f.debug("Run Update.");
-				progress[guid].count++;
-				progress[guid].message = "Run results...";
+				if (progress) progress[guid].count++;
+				if (progress) progress[guid].message = "Run results...";
 				return $q(function(resolve,reject){
 					try {
 						firebase.database().ref(f.settings().baseRef).update(doAction.var[guid].results,function(err){
