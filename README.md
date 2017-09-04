@@ -107,7 +107,7 @@ angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
 }]);
 ```
 
-##### [Example fiddle](https://jsfiddle.net/micanose/pq8t5unx/9/)
+##### [Example fiddle](https://jsfiddle.net/micanose/pq8t5unx/10/)
 
 ##### Results
 | Incoming data                                    | Recorded data                                    |
