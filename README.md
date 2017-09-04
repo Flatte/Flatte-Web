@@ -45,7 +45,7 @@ angular.module('myApp').run(['flatte',function(flatte){
   flatte.settings({
     debug: false,
     baseRef: "/",
-    con: null,
+    con: firebase,
     manifest: {},
     predefined: {
       ".true": true,
