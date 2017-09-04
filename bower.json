@@ -2,7 +2,7 @@
   "name": "flatte",
   "version": "1.0.1-beta.85",
   "main": "dist/flatte.js",
-  "description": "Client-Side nosql Firebase Realtime Database save management.",
+  "description": "Client-Side NOSql Firebase Realtime Database modeling and management system. (only with angularjs for now...)",
   "keywords": [
     "Flatte",
     "flattejs",

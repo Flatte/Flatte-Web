@@ -4,7 +4,7 @@
   "scripts": {
     "build": "gulp build"
   },
-  "description": "Client-Side nosql Firebase Realtime Database save management.",
+  "description": "Client-Side NOSql Firebase Realtime Database modeling and management system. (only with angularjs for now...)",
   "keywords": [
     "Flatte",
     "flattejs",
