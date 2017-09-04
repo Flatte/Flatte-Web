@@ -735,7 +735,7 @@
 					for(var command in commands){
 						promises.push($q(function(resolve,reject){
 							commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action,manifestPath).then(function(res){
-								$.extend(doAction.var[guid].objects[ref].$results,res);
+								angular.extend(doAction.var[guid].objects[ref].$results,res);
 								resolve();
 							}).catch(function(err){reject(err);return false;})
 						}));
@@ -801,7 +801,7 @@
 						promises.push($q(function (resolve, reject) {
 							replacePredefined(object.$results).then(function (res) {
 								doAction.var[guid].objects[object.ref].$results = res;
-								$.extend(doAction.var[guid].results,res);
+								angular.extend(doAction.var[guid].results,res);
 								resolve()
 							}).catch(function (err) {reject(err);return false;});
 						}));
