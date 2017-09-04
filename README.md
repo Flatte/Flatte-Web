@@ -60,7 +60,7 @@ angular.module('myApp').run(['flatte',function(flatte){
 ```
 
 #### Understranding Flatte Manifest
-Every node has "_q" and "childs" property. "_q" contains node's own options.
+Every node has "_q" and "childs" properties. "_q" contains node's own options.
 ```javascript
 flatt.settings().manifest = {
   "foo":{
