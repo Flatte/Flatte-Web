@@ -2,7 +2,7 @@
  *
  * Client-Side nosql Firebase Realtime Database save management.
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.85 - Mon Sep 04 2017 13:54:19 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.86 - Mon Sep 04 2017 14:01:50 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -735,7 +735,7 @@
 					for(var command in commands){
 						promises.push($q(function(resolve,reject){
 							commands[command](ref,data,path,((manifest && manifest.hasOwnProperty(command) && (manifest[command] !== "")) ? manifest[command] : null),action,manifestPath).then(function(res){
-								$.extend(doAction.var[guid].objects[ref].$results,res);
+								angular.extend(doAction.var[guid].objects[ref].$results,res);
 								resolve();
 							}).catch(function(err){reject(err);return false;})
 						}));
@@ -801,7 +801,7 @@
 						promises.push($q(function (resolve, reject) {
 							replacePredefined(object.$results).then(function (res) {
 								doAction.var[guid].objects[object.ref].$results = res;
-								$.extend(doAction.var[guid].results,res);
+								angular.extend(doAction.var[guid].results,res);
 								resolve()
 							}).catch(function (err) {reject(err);return false;});
 						}));
