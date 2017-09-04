@@ -27,7 +27,7 @@ Easy and free registration
 ## How to use
 ### Install
 ##### CDN
-	<script type="text/javascript" src="https://cdn.rawgit.com/Flatte/Flatte-Web/1.0.1-beta.84/dist/flatte.min.js"></script>
+	<script type="text/javascript" src="https://cdn.rawgit.com/Flatte/Flatte-Web/1.0.1-beta.86/dist/flatte.min.js"></script>
 ##### Bower
 	$ bower install flatte
 If you don't want to use bower or cdn, you can manually download the latest version of [flatte.min.js](https://raw.githubusercontent.com/Flatte/Flatte-Web/master/dist/flatte.min.js). 
