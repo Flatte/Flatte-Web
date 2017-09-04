@@ -36,7 +36,7 @@ If you don't want to use bower or cdn, you can manually download the latest vers
 
 Inject flatte in your angularjs module.
 ```javascript
-angular.module('myApp',['mx.flatte'])
+angular.module('myApp',['mx.flatte']);
 ```
 
 Set configurations.
@@ -99,10 +99,10 @@ Defined manifest in settings.
 ```
 Sending save data to flatte.
 ```javascript
-angular.module('myApp').controller('mycontroller',['flatte',function(flatte){
+angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
   flatte.do([{
-    Ref:"customer/-KrvGZuVwqwerty",
-    data:{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
+    ref:"customer/-KrvGZuVwqwerty",
+    data:{"firstName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
   }]);
 }]);
 ```
@@ -110,7 +110,7 @@ angular.module('myApp').controller('mycontroller',['flatte',function(flatte){
 ##### Results
 | Incoming data                                    | Recorded data                                    |
 |--------------------------------------------------|--------------------------------------------------|
-| customer/-KrvGZuVwqwerty/firsName:"Elon"         | customer/-KrvGZuVwqwerty/firsName:"**ELON**"     |
+| customer/-KrvGZuVwqwerty/firstName:"Elon"         | customer/-KrvGZuVwqwerty/firstName:"**ELON**"     |
 | customer/-KrvGZuVwqwerty/lastName:"Musk"         | customer/-KrvGZuVwqwerty/lastName:"Musk"         |
 | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
 |                                                  | **contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
