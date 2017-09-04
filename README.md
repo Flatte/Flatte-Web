@@ -27,7 +27,7 @@ Easy and free registration
 ## How to use
 ### Install
 ##### CDN
-	https://
+	<script type="text/javascript" src="https://cdn.rawgit.com/Flatte/Flatte-Web/1.0.1-beta.84/dist/flatte.min.js"></script>
 ##### Bower
 	$ bower install flatte
 If you don't want to use bower or cdn, you can manually download the latest version of [flatte.min.js](https://raw.githubusercontent.com/Flatte/Flatte-Web/master/dist/flatte.min.js). 
@@ -36,7 +36,7 @@ If you don't want to use bower or cdn, you can manually download the latest vers
 
 Inject flatte in your angularjs module.
 ```javascript
-angular.module('myApp',['flatte'])
+angular.module('myApp',['mx.flatte']);
 ```
 
 Set configurations.
@@ -45,7 +45,7 @@ angular.module('myApp').run(['flatte',function(flatte){
   flatte.settings({
     debug: false,
     baseRef: "/",
-    con: null,
+    con: firebase,
     manifest: {},
     predefined: {
       ".true": true,
@@ -99,26 +99,25 @@ Defined manifest in settings.
 ```
 Sending save data to flatte.
 ```javascript
-angular.module('myApp').controller('mycontroller',['flatte',function(flatte){
+angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
   flatte.do([{
-    Ref:"customer/-KrvGZuVwqwerty",
-    data:{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
+    ref:"customer/-KrvGZuVwqwerty",
+    data:{"firstName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
   }]);
 }]);
 ```
 
+##### [Example fiddle](https://jsfiddle.net/micanose/pq8t5unx/9/)
+
 ##### Results
 | Incoming data                                    | Recorded data                                    |
 |--------------------------------------------------|--------------------------------------------------|
-| customer/-KrvGZuVwqwerty/firsName:"Elon"         | customer/-KrvGZuVwqwerty/firsName:"**ELON**"     |
+| customer/-KrvGZuVwqwerty/firstName:"Elon"         | customer/-KrvGZuVwqwerty/firstName:"**ELON**"     |
 | customer/-KrvGZuVwqwerty/lastName:"Musk"         | customer/-KrvGZuVwqwerty/lastName:"Musk"         |
 | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     | customer/-KrvGZuVwqwerty/twitter:"@elonmusk"     |
 |                                                  | **contact/-KrvGZuVwqwerty/firsName:"Elon"**      |
 
-
-
 ![Flatte Example Photo](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
-
 
 ## Versioning
 
