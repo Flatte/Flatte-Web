@@ -1,10 +1,10 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.83",
+  "version": "1.0.1-beta.84",
   "scripts": {
     "build": "gulp build"
   },
-  "description": "Nosql denormalization management for Firebase",
+  "description": "Client-Side nosql Firebase Realtime Database save management.",
   "keywords": [
     "Flatte",
     "flattejs",

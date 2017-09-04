@@ -1,30 +1,32 @@
 var config = {
-	apiKey: "AIzaSyBAaHRAoW1aamCM6VtKGNyhfc1xQKZy-yw",
-	authDomain: "flatte-14ec0.firebaseapp.com",
-	databaseURL: "https://flatte-14ec0.firebaseio.com",
-	projectId: "flatte-14ec0",
-	storageBucket: "",
-	messagingSenderId: "535369674847"
+	apiKey: "<your-apiKey>",
+	authDomain: "<your-authDomain>",
+	databaseURL: "<your-databaseURL>",
+	projectId: "<your-projectId>",
+	storageBucket: "<your-storageBucket>",
+	messagingSenderId: "<your-messagingSenderId>"
 };
 firebase.initializeApp(config);
 
 
 describe('flatte', function() {
-	beforeEach(function(){
-		//flatte.set
-		firebase.database().ref("tests").set({a:1},function(err){console.log(err);})
-	});
-
 	beforeEach(module('mx.flatte'));
 
 	var flatte;
 	beforeEach(inject(function (_flatte_) {
 		flatte = _flatte_;
+		flatte.settings({
+			debug: true,
+			con: firebase,
+			manifest: {}
+		});
+		//flatte.set
+		firebase.database().ref("tests").set({a:1},function(err){console.log(err);})
 	}));
 
 	describe("baseRef",function(){
 		it('should return flatte base ref', function () {
-			expect(flatte.baseRef()).toBe("/");
+			expect(flatte.settings().baseRef).toBe("/");
 		});
 	});
 

@@ -1,6 +1,6 @@
 /**
  *
- * Nosql denormalization management for Firabase
+ * Client-Side nosql Firebase Realtime Database save management.
  * @link https://flatte.github.io/Flatte-Web/
  * @version {*{version}*} - {*{date}*}
  *
@@ -17,102 +17,70 @@
 !function(){
 	"use strict";
 
-	angular.module('mx.flatte',[])
-		.provider('mxFlatte',flatteProvider)
-		.run(flatteRun)
-		.service('flatte',flatte);
+	angular.module('mx.flatte',[]).factory('flatte',flatte);
 
-	flatteProvider.$inject = [];
-	function flatteProvider(){
-		var provider = this;
-		var settings = {
+	flatte.$inject = ['$q','$filter','$timeout'];
+	function flatte($q,$filter,$timeout){
+		var f = {
+			checkConnection : checkConnection,
+			settings: settings,
+			debug : debug,
+			serial : serial,
+			db : firebase.database(),
+			dbref : firebase.database().ref(),
+			dbTime : function(){ return firebase.database.ServerValue.TIMESTAMP },
+			dbKey : function(){ return firebase.database().ref().push().key },
+			cleanData : function(data){ return JSON.parse(JSON.serialize(data)) },
+			do : doAction
+		};
+
+		function checkConnection(){
+			return $q(function(resolve, reject) {
+				/* if firebase object has been defined */
+				if ((!!settings.con) && (!!settings.con.database)) {
+					/* try to connect defined base path of firebase. As: 'flatteCheckConnection' */
+					settings.con.database().ref('.info/connected').once('value', function (snap) {
+						if (settings.debug) console.info("%c♣ [Flatte] Connection Success.","color:#3883fa;");
+						resolve(true);
+					}, function (err) {
+						if (settings.debug) console.error('[Flatte] Connection Error: ', err);
+						reject(err);return false;
+					});
+				} else {
+					var err = {code:"FB000",message:'Connection Error: settings.con is not defined.'};
+					console.error('[Flatte] Connection Error: ', err);
+					reject(err);return false;
+				}
+			});
+		};
+
+		function settings(options,set){
+			var option;
+			// if set remove old properties
+			if(set) for(option in this.settings) if ((option !== "settings") && (this.settings.hasOwnProperty(option))) delete this.settings[option];
+
+			// set new properties
+			if (options) for(option in options) this.settings[option] = options[option];
+
+			// return settings
+			return this.settings;
+		}
+		/* Default Settings */
+		f.settings({
 			debug: false,
 			baseRef: "/",
-			conStatus: false,
 			con: null,
-			manifest: [],
+			manifest: {},
 			predefined: {
 				".true": true,
 				".false": false,
-				".id": function(){ return firebase.database().ref().push().key; },
-				".timestamp": firebase.database.ServerValue.TIMESTAMP,
-				".auth": false
+				".null": null,
+				".timestamp": firebase.database.ServerValue.TIMESTAMP
 			}
-		};
-
-		provider.settings = function(options){ angular.extend(settings,options); };
-
-		provider.$get = $get;
-
-		$get.$inject = ['$q','$injector'];
-		function $get($q,$injector){
-			var checkConnection = function(){
-				return $q(function(resolve, reject) {
-					/* if firebase object has been defined */
-					if ((!!settings.con) && (!!settings.con.database)) {
-						/* try to connect defined base path of firebase. As: 'flatteCheckConnection' */
-						settings.con.database().ref('.info/connected').once('value', function (snap) {
-							if (settings.debug) console.info("%c♣ [Flatte] Connection Success.","color:#3883fa;");
-							settings.conStatus = true;
-							resolve(true);
-						}, function (err) {
-							if (settings.debug) console.error('[Flatte] Connection Error: ', err);
-							settings.conStatus = false;
-							reject(err);return false;
-						});
-					} else {
-						var err = {code:"FB000",message:'Connection Error: settings.con is not defined.'};
-						console.error('[Flatte] Connection Error: ', err);
-						reject(err);return false;
-					}
-				});
-			};
-
-			/**
-			 * Return available $get properties
-			 */
-			return {
-				settings: settings,
-				checkConnection: checkConnection
-			}
-		}
-	}
-
-	flatteRun.$inject = ['mxFlatte'];
-	function flatteRun(mxFlatte) {
-		mxFlatte.checkConnection();
-	}
-
-	flatte.$inject = ['mxFlatte','$q','$filter','$timeout'];
-	function flatte(mxFlatte,$q,$filter,$timeout){
-		var f = this;
-		f.debug = debug;
-		f.serial = serial;
-		f.db = firebase.database();
-		f.dbref = f.db.ref();
-		f.dbTime = function(){ return firebase.database.ServerValue.TIMESTAMP };
-		f.dbKey = function(){ return firebase.database().ref().push().key };
-		f.cleanData = function(data){ return JSON.parse(JSON.serialize(data)) };
-		f.setManifest = function(manifest){mxFlatte.settings.manifest = angular.copy(manifest)};
-		f.setPredefined = function(newData){
-			mxFlatte.settings.predefined = newData;
-		};
-		f.predefined = function(item,value){
-			if (item) {
-				if (typeof item === "object") {
-					angular.forEach(item,function(value,key){
-						mxFlatte.settings.predefined[key] = value;
-					})
-				} else {
-					mxFlatte.settings.predefined[item] = value;
-				}
-			} else return mxFlatte.settings.predefined;
-		};
-		f.baseRef = function(ref){if (ref) mxFlatte.settings.baseRef = ref; else return mxFlatte.settings.baseRef; };
-		f.do = doAction;
+		},true);
 
 		function debug(data){
-			if (mxFlatte.settings.debug) {
+			if (f.settings().debug) {
 				if (angular.isObject(data)) {
 					console.info("%c♣ [" + data.code + "] "+ data.message,"color:#3883fa;");
 				} else console.info("%c♣ "+data,"color:#3883fa;");
@@ -142,7 +110,6 @@
 			return destination;
 		}
 
-		/* Fb Do Functions */
 		function doAction (saveObjects,progress){
 			f.debug("flatte.do() called...");
 			var
@@ -383,7 +350,7 @@
 											match = result.if.value;
 										}
 
-										result.if.value = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[result.if.value]) : result.if.value;
+										result.if.value = (f.settings().predefined.hasOwnProperty(match)) ? ((typeof f.settings().predefined[match] === "function") ? f.settings().predefined[match](params) : f.settings().predefined[result.if.value]) : result.if.value;
 										resolve(result)
 									})
 								})
@@ -431,7 +398,7 @@
 							angular.forEach(options,function(option){
 								promises.push($q(function(resolve,reject){
 									replace(option).then(function(res){
-										firebase.database().ref(f.baseRef()+"/"+res.path).orderByChild(res.if.key).equalTo(res.if.value).once("value",function(snap){
+										firebase.database().ref(f.settings().baseRef+"/"+res.path).orderByChild(res.if.key).equalTo(res.if.value).once("value",function(snap){
 											loopData(snap.val(),data, res, action).then(function (res) { resolve(); }).catch(function(err){ reject(err); return false; });
 										},function(err){reject(err)});
 									});
@@ -496,7 +463,7 @@
 
 			return $q(function(resolve,reject){
 				f.serial(tasks).then(function(){
-					if (mxFlatte.settings.debug) {
+					if (f.settings().debug) {
 						// Ended action return resolved result
 						resolve({results:(doAction.var[guid].results || "No save result generated !.."),manifestInfections:doAction.var[guid].appliedManifest});
 					} else {
@@ -594,7 +561,7 @@
 
 			function getDbData(ref){
 				return $q(function(resolve,reject){
-					firebase.database().ref(f.baseRef()+"/"+ref).once("value",function(snap){
+					firebase.database().ref(f.settings().baseRef+"/"+ref).once("value",function(snap){
 						var result = {};
 						angular.forEach(snap.val(),function(item,key){
 							result[key] = item;
@@ -697,7 +664,7 @@
 			function createIdPaths(ref,path){
 				function findID(findPath){
 					var promises = [],ID = false;
-					angular.forEach(eval("mxFlatte.settings.manifest.data"+((findPath.length > 0) ? "['"+findPath.join("'].childs['")+"'].childs":"")),function(node,key){
+					angular.forEach(eval("f.settings().manifest"+((findPath.length > 0) ? "['"+findPath.join("'].childs['")+"'].childs":"")),function(node,key){
 						promises.push($q(function(resolve,reject) {
 							if (node.hasOwnProperty("_q") && node._q.hasOwnProperty("ID")) ID = key;
 							resolve();
@@ -717,7 +684,7 @@
 				angular.forEach(path,function(item){
 					promises.push(function(){return $q(function(resolve,reject){
 						try {
-							hasItem = eval("mxFlatte.settings.manifest.data"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
+							hasItem = eval("f.settings().manifest"+((newPath.length > 0) ? "['"+newPath.join("'].childs['")+"'].childs":"")+".hasOwnProperty('"+item+"')");
 						} catch(err){
 							hasItem = false;
 						}
@@ -761,7 +728,7 @@
 
 					manifest = false;
 					try {
-						manifest = eval("mxFlatte.settings.manifest.data"+((manifestPath.length > 0) ? "['"+manifestPath.join("'].childs['")+"']":"")+"._q");
+						manifest = eval("f.settings().manifest"+((manifestPath.length > 0) ? "['"+manifestPath.join("'].childs['")+"']":"")+"._q");
 					} catch(err) {manifest = false; reject(err);return false;}
 
 					if ((manifestPath.length > 0) && (!doAction.var[guid].appliedManifest.hasOwnProperty(manifestPath.join("/")))) doAction.var[guid].appliedManifest.push(manifestPath.join("/"));
@@ -859,7 +826,7 @@
 							match = value;
 						}
 
-						results[key] = (mxFlatte.settings.predefined.hasOwnProperty(match)) ? ((typeof mxFlatte.settings.predefined[match] === "function") ? mxFlatte.settings.predefined[match](params) : mxFlatte.settings.predefined[match]) : match;
+						results[key] = (f.settings().predefined.hasOwnProperty(match)) ? ((typeof f.settings().predefined[match] === "function") ? f.settings().predefined[match](params) : f.settings().predefined[match]) : match;
 						resolve();
 					}));
 				});
@@ -877,7 +844,7 @@
 				progress[guid].message = "Run results...";
 				return $q(function(resolve,reject){
 					try {
-						firebase.database().ref(f.baseRef()).update(doAction.var[guid].results,function(err){
+						firebase.database().ref(f.settings().baseRef).update(doAction.var[guid].results,function(err){
 							if (err) reject(err); else {
 								resolve()
 							}
@@ -900,6 +867,7 @@
 		doAction.getDebug = function () { return this.var; };
 		doAction.clearDebug = function () { this.var = {}; };
 
+		return f;
 	}
 
 }();

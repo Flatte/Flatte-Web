@@ -20,53 +20,94 @@ There are not many prerequisites required to build and run this project, but you
 * Firebase
 * AngularJs
 
-### Installing
-Coming soon...
-
-## Demo 
+## Flatte Manifest Builder 
 Easy and free registration
 [Flatte Manifesto Builder](https://flatte.maxabab.com)
 
-## Basic Usage
-#### Javascript Code
+## How to use
+### Install
+##### CDN
+	https://
+##### Bower
+	$ bower install flatte
+If you don't want to use bower or cdn, you can manually download the latest version of [flatte.min.js](https://raw.githubusercontent.com/Flatte/Flatte-Web/master/dist/flatte.min.js). 
+
+### Basic Usage
+
+Inject flatte in your angularjs module.
 ```javascript
-flatte.do([
-  {
-    Ref:"customer/-KrvGZuVwqwerty",
-    data:{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
-  }
-]);
+angular.module('myApp',['flatte'])
 ```
 
-#### Manifesto Json
+Set configurations.
 ```javascript
+angular.module('myApp').run(['flatte',function(flatte){
+  flatte.settings({
+    debug: false,
+    baseRef: "/",
+    con: null,
+    manifest: {},
+    predefined: {
+      ".true": true,
+      ".false": false,
+      ".null": null,
+      ".timestamp": firebase.database.ServerValue.TIMESTAMP
+    }
+  });
+}])
+```
+
+#### Understranding Flatte Manifest
+Every node has "_q" and "childs" property. "_q" contains node's own options.
+```javascript
+flatt.settings().manifest = {
+  "foo":{
+    "_q":{},      // define action specifications of this node. (ID, saveValue, deleteValue, copy, externalEffect, function)
+    "childs":{    // contains children of "foo" node
+      "bar":{"_q":{},"childs":{}},
+      "baz":{"_q":{},"childs":{}}
+    }
+  }
+}
+```
+For more information about manifest structure and how to use, please visit our [wiki](https://github.com/Flatte/Flatte-Web/wiki)
+
+
+#### Example
+Defined manifest in settings.
+```json
 {
-  data:{
-    "customer": {
-      "childs": {
-        "customerID": {
-          "_q": {
-            "ID": true
-          }
-          "childs": {
-            "firstName": {
-              "_q": {
-                "saveValue": {"filter": "uppercase"},
-                "deleteValue": ".auth",
-                "copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#customerID/firstName"}]
-              }
+  "customer": {
+    "childs": {
+      "customerID": {
+        "_q": {
+          "ID": true
+        },
+        "childs": {
+          "firstName": {
+            "_q": {
+              "saveValue": {"filter": "uppercase"},
+              "deleteValue": ".auth",
+              "copy":[{"saveValue": "$","deleteValue": "null","path": "/contact/#customerID/firstName"}]
             }
           }
         }
       }
     }
-  },
-  id_index{
-    "customer>ID":"customerID"
   }
 }
 ```
-#### Results
+Sending save data to flatte.
+```javascript
+angular.module('myApp').controller('mycontroller',['flatte',function(flatte){
+  flatte.do([{
+    Ref:"customer/-KrvGZuVwqwerty",
+    data:{"firsName":"Elon","lastName": "Musk","twitter": "@elonmusk"}
+  }]);
+}]);
+```
+
+##### Results
 | Incoming data                                    | Recorded data                                    |
 |--------------------------------------------------|--------------------------------------------------|
 | customer/-KrvGZuVwqwerty/firsName:"Elon"         | customer/-KrvGZuVwqwerty/firsName:"**ELON**"     |
@@ -77,6 +118,7 @@ flatte.do([
 
 
 ![Flatte Example Photo](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
+
 
 ## Versioning
 
