@@ -9,7 +9,7 @@ Some functions may not work as expected.
 
 **We do not recommend using flatte in your actual projects.**
 
-> _For detailed explanation, please checkout our [wiki](https://github.com/Flatte/Flatte-Web/wiki)
+> _For detailed explanation, please checkout our **[wiki](https://github.com/Flatte/Flatte-Web/wiki)**_
 
 ## Getting Started
 
