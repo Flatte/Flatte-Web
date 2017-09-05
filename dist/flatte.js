@@ -2,7 +2,7 @@
  *
  * Client-Side nosql Firebase Realtime Database save management.
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.87 - Tue Sep 05 2017 17:07:42 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.88 - Tue Sep 05 2017 21:11:41 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -252,22 +252,36 @@
 
 								promises.push($q(function (resolve, reject) {
 									placeIDs(path,manifestPath,runRef.split('/'),"#").then(function(resRef){
-										placeIDs(path,manifestPath,options.saveValue.split('/'),"#").then(function(resValue){
-											commands.saveValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+										if (typeof saveValue === "string") {
+											placeIDs(path,manifestPath,options.saveValue.split('/'),"#").then(function(resValue){
+												commands.saveValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+													angular.extend(results,res);
+													resolve();
+												}).catch(function(err){ reject(err); return false; });
+											});
+										} else {
+											commands.saveValue(ref, runData, resRef.join('/'), options.saveValue, action,manifestPath).then(function (res) {
 												angular.extend(results,res);
 												resolve();
 											}).catch(function(err){ reject(err); return false; });
-										});
+										}
 									});
 								}));
 								promises.push($q(function (resolve, reject) {
 									placeIDs(path,manifestPath,runRef.split('/'),"#").then(function(resRef){
-										placeIDs(path,manifestPath,options.deleteValue.split('/'),"#").then(function(resValue){
-											commands.deleteValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+										if (typeof deleteValue === "string") {
+											placeIDs(path,manifestPath,options.deleteValue.split('/'),"#").then(function(resValue){
+												commands.deleteValue(ref, runData, resRef.join('/'), resValue.join('/'), action,manifestPath).then(function (res) {
+													angular.extend(results,res);
+													resolve();
+												}).catch(function(err){ reject(err); return false; });
+											});
+										} else {
+											commands.deleteValue(ref, runData, resRef.join('/'), options.deleteValue, action,manifestPath).then(function (res) {
 												angular.extend(results,res);
 												resolve();
 											}).catch(function(err){ reject(err); return false; });
-										});
+										}
 									});
 								}));
 
@@ -279,8 +293,8 @@
 
 								if (
 									(
-										((action === "save") && ((options.saveValue === null) || (options.saveValue === "$") || (options.saveValue.trim() === ""))) ||
-										((action !== "save") && ((options.deleteValue === null) || (options.deleteValue === "$") || (options.deleteValue.trim() === "")))
+										((action === "save") && ((options.saveValue === null) || (options.saveValue === "$") || (typeof options.saveValue === "string" && options.saveValue.trim() === ""))) ||
+										((action !== "save") && ((options.deleteValue === null) || (options.deleteValue === "$") || (typeof options.deleteValue === "string" && options.deleteValue.trim() === "")))
 									) && angular.isObject(loopData)
 								) {
 									angular.forEach(loopData,function(value,key){
@@ -361,7 +375,7 @@
 								if (options.save.value !== ".doNothing") {
 									if (action === "save") {
 										promises.push($q(function (resolve, reject) {
-											commands.saveValue(ref, "1", (path + "/" + options.save.key).split('/'), options.save.value, action,manifestPath).then(function (res) {
+											commands.saveValue(ref, data, (path + "/" + options.save.key).split('/'), options.save.value, action,manifestPath).then(function (res) {
 												if (!angular.equals(data,res)) angular.extend(results, res);
 												resolve();
 											}).catch(function (err) {
