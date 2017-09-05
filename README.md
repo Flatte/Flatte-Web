@@ -9,7 +9,7 @@ Some functions may not work as expected.
 
 **We do not recommend using flatte in your actual projects.**
 
-_Do not hasitate to open an issue. We are waiting for your collaborations to bring this project to a higher level. We are paying attentions on feedbacks._
+> _For detailed explanation, please checkout our **[wiki](https://github.com/Flatte/Flatte-Web/wiki)**_
 
 ## Getting Started
 
@@ -60,7 +60,7 @@ angular.module('myApp').run(['flatte',function(flatte){
 ```
 
 #### Understranding Flatte Manifest
-Every node has "_q" and "childs" properties. "_q" contains node's own options.
+Every node has "_q" and "childs" property. "_q" contains node's own options.
 ```javascript
 flatt.settings().manifest = {
   "foo":{
@@ -79,7 +79,7 @@ For more information about manifest structure and how to use, please visit our [
 Defined manifest in settings.
 ```json
 {
-  "customer": {
+  "customers": {
     "childs": {
       "customerID": {
         "_q": {

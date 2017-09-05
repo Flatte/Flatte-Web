@@ -2,7 +2,7 @@
  *
  * Client-Side nosql Firebase Realtime Database save management.
  * @link https://flatte.github.io/Flatte-Web/
- * @version v.1.0.1-beta.86 - Mon Sep 04 2017 14:01:50 GMT+0300 (Türkiye Standart Saati)
+ * @version v.1.0.1-beta.87 - Tue Sep 05 2017 17:07:42 GMT+0300 (Türkiye Standart Saati)
  *
  * Copyright (c) 2017 Flatte - Sezer Ekinci <sezer@maxabab.com>, Kaan Ekinci <kaan@maxabab.com>
  * @license MIT License, https://opensource.org/licenses/MIT
@@ -428,15 +428,18 @@
 								})
 							})
 						}
-						function $function(flatte, $q, $ref, $data, $path, $action, $manifestPath) {
-							return $q(function (resolve, reject) {
+
+						return $q(function(resolve,reject){
+							var $function = function(){ return $q.when() };
+							if (typeof options === "function"){
+								$function = options;
+							} else if (typeof options === "string"){
 								try {
 									var res = {};
-									eval(options);
+									eval("$function = "+options);
 								} catch(err){reject(err);return false;}
-							})
-						}
-						return $q(function(resolve,reject){
+							}
+
 							if (options) {
 								$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
 									resolve(res)

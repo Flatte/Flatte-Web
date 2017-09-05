@@ -428,15 +428,18 @@
 								})
 							})
 						}
-						function $function(flatte, $q, $ref, $data, $path, $action, $manifestPath) {
-							return $q(function (resolve, reject) {
+
+						return $q(function(resolve,reject){
+							var $function = function(){ return $q.when() };
+							if (typeof options === "function"){
+								$function = options;
+							} else if (typeof options === "string"){
 								try {
 									var res = {};
-									eval(options);
+									eval("$function = "+options);
 								} catch(err){reject(err);return false;}
-							})
-						}
-						return $q(function(resolve,reject){
+							}
+
 							if (options) {
 								$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
 									resolve(res)
