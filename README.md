@@ -79,7 +79,7 @@ For more information about manifest structure and how to use, please visit our [
 Defined manifest in settings.
 ```json
 {
-  "customer": {
+  "customers": {
     "childs": {
       "customerID": {
         "_q": {
