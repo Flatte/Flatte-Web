@@ -152,3 +152,5 @@ See also the list of [contributors](https://github.com/Flatte/Flatte-Web/graphs/
 ## License
 - Flatte is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
   - [http://opensource.org/licenses/MIT](http://opensource.org/licenses/MIT)
+
+[![Flatte Manifest Builder 01 Explore A Demo Project](http://img.youtube.com/vi/g6rlvM0GuA8/0.jpg)](http://www.youtube.com/watch?v=g6rlvM0GuA8)
