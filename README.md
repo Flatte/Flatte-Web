@@ -3,6 +3,18 @@
 
 Client-Side NOSql Firebase Realtime Database modeling and management system. (only with angularjs for now...)
 
+Flatte manages your database for you with a manifest which is created by you.
+
+## Benefits
+* Flatte provides to create a NOSql database model.
+* MySQL like transaction for Firebase. (If all conditions are passed, flatte sends the whole data to firebase.)
+* Client side processing.
+* Flatte handles copy records and external effects for you. No need to write everything in your application. (Denormalization)
+* Flatte allows you to create field based functions.
+* You can create your constants with predefined templates. (also with functions)
+* You can apply filters to incoming values. (Such as uppercase, date format..)
+* With [Flatte Manifesto Builder](https://flatte.maxabab.com), you can easily create and visualize your manifest.
+
 ### Attention!
 This is a beta release. We have not finished all the tests yet.
 Some functions may not work as expected.
