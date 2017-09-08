@@ -133,6 +133,8 @@ angular.module('myApp').controller('myCtrl',['flatte',function(flatte){
 
 ![Flatte Example Photo](https://flatte.maxabab.com/assets/images/welcome/flatte_screen/full.png "Flatte Manifesto Builder")
 
+[![Stories in Ready](https://badge.waffle.io/Flatte/Flatte-Web.png?label=ready&title=Ready)](http://waffle.io/Flatte/Flatte-Web)
+
 ## Versioning
 
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [Flatte Web Tags](https://github.com/Flatte/Flatte-Web/tags). 
