@@ -86,6 +86,7 @@ flatt.settings().manifest = {
 ```
 For more information about manifest structure and how to use, please visit our [wiki](https://github.com/Flatte/Flatte-Web/wiki)
 
+![flatte.do process diagram](https://github.com/Flatte/Flatte-Web/raw/master/wiki/assets/flatte_do_process_diagram.jpg "flatte.do process diagram")
 
 #### Example
 Defined manifest in settings.
