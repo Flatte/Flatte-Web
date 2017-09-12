@@ -26,8 +26,8 @@
 			settings: settings,
 			debug : debug,
 			serial : serial,
-			db : firebase.database(),
-			dbref : firebase.database().ref(),
+			db : firebase.database,
+			dbref : firebase.database().ref,
 			dbTime : function(){ return firebase.database.ServerValue.TIMESTAMP },
 			dbKey : function(){ return firebase.database().ref().push().key },
 			cleanData : function(data){ return JSON.parse(JSON.serialize(data)) },
@@ -444,22 +444,23 @@
 						}
 
 						return $q(function(resolve,reject){
-							var $function = function(){ return $q.when() };
-							if (typeof options === "function"){
-								$function = options;
-							} else if (typeof options === "string"){
-								try {
-									var res = {};
-									eval("$function = "+options);
-								} catch(err){reject(err);return false;}
-							}
+							if (!options) resolve();
 
-							if (options) {
-								$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
+
+							if (typeof options === "function"){
+								options(f, $q, ref, data, path, action, manifestPath).then(function (res) {
 									resolve(res)
 								}).catch(function (err) {reject(err);return false;});
-							} else {
-								resolve();
+							} else if (typeof options === "string"){
+								try {
+									var res = {}, $function = function(){ return $q.when() };
+									console.log("$function = "+options);
+									eval("$function = "+options);
+									console.log(typeof $function);
+									$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
+										resolve(res)
+									}).catch(function (err) {reject(err);return false;});
+								} catch(err){reject(err);return false;}
 							}
 						});
 					}
@@ -833,17 +834,50 @@
 				var promises = [],results = {};
 
 				angular.forEach(data,function(value,key){
-					promises.push($q(function(resolve,reject){
-						var params,match;
-						if (typeof value === "string") {
-							match = (value.replace(/\([^\)]*\)/g, '()')) ? value.replace(/\([^\)]*\)/g, '()').replace('()', '') : value;
-							if (match) params = value.match(/\([^\)]*\)/g);
-							if (params) params = params[0].replace('(', '').replace(')', '');
+					promises.push($q(function(resolve,reject) {
+						var keyParams, keyMatch, valueParams, valueMatch, keyResult, valueResult;
+
+						if (key.split('/').length > 0) {
+							var newKeyResult = [], newParams, newMatch, newKeyResult;
+							key.split('/').map(function (k) {
+								newMatch = (k.replace(/\([^\)]*\)/g, '()')) ? k.replace(/\([^\)]*\)/g, '()').replace('()', '') : k;
+								if (newMatch) newParams = k.match(/\([^\)]*\)/g);
+								if (newParams) newParams = newParams[0].replace('(', '').replace(')', '');
+								newKeyResult.push(
+									(f.settings().predefined.hasOwnProperty(newMatch)) ?
+										((typeof f.settings().predefined[newMatch] === "function") ?
+											f.settings().predefined[newMatch](newParams) :
+											f.settings().predefined[newMatch]) :
+										newMatch
+								);
+							});
+							keyResult = newKeyResult.join('/');
 						} else {
-							match = value;
+							if (typeof key === "string") {
+								keyMatch = (key.replace(/\([^\)]*\)/g, '()')) ? key.replace(/\([^\)]*\)/g, '()').replace('()', '') : key;
+								if (keyMatch) keyParams = key.match(/\([^\)]*\)/g);
+								if (keyParams) keyParams = keyParams[0].replace('(', '').replace(')', '');
+							} else {
+								keyMatch = key;
+							}
+							keyResult = (f.settings().predefined.hasOwnProperty(keyMatch)) ?
+								((typeof f.settings().predefined[keyMatch] === "function") ?
+									f.settings().predefined[keyMatch](keyParams) :
+									f.settings().predefined[keyMatch]) :
+								keyMatch;
 						}
 
-						results[key] = (f.settings().predefined.hasOwnProperty(match)) ? ((typeof f.settings().predefined[match] === "function") ? f.settings().predefined[match](params) : f.settings().predefined[match]) : match;
+						if (typeof value === "string") {
+							valueMatch = (value.replace(/\([^\)]*\)/g, '()')) ? value.replace(/\([^\)]*\)/g, '()').replace('()', '') : value;
+							if (valueMatch) valueParams = value.match(/\([^\)]*\)/g);
+							if (valueParams) valueParams = valueParams[0].replace('(', '').replace(')', '');
+						} else {
+							valueMatch = value;
+						}
+
+						valueResult = (f.settings().predefined.hasOwnProperty(valueMatch)) ? ((typeof f.settings().predefined[valueMatch] === "function") ? f.settings().predefined[valueMatch](valueParams) : f.settings().predefined[valueMatch]) : valueMatch;
+
+						results[keyResult] = valueResult;
 						resolve();
 					}));
 				});
