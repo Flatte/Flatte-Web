@@ -1,6 +1,6 @@
 {
   "name": "flatte",
-  "version": "1.0.1-beta.88",
+  "version": "1.0.1-beta.89",
   "main": "dist/flatte.js",
   "description": "Client-Side NOSql Firebase Realtime Database modeling and management system. (only with angularjs for now...)",
   "keywords": [
