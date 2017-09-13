@@ -453,11 +453,10 @@
 								}).catch(function (err) {reject(err);return false;});
 							} else if (typeof options === "string"){
 								try {
-									var res = {}, $function = function(){ return $q.when() };
-									console.log("$function = "+options);
-									eval("$function = "+options);
-									console.log(typeof $function);
-									$function(f, $q, ref, data, path, action, manifestPath).then(function (res) {
+									var res = {}, main = function(){ return $q.when() };
+									eval(options);
+
+									main(f, $q, ref, data, path, action, manifestPath).then(function (res) {
 										resolve(res)
 									}).catch(function (err) {reject(err);return false;});
 								} catch(err){reject(err);return false;}
